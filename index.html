@@ -234,7 +234,7 @@
   .sidebar-overlay.open { display: block; animation: fadeIn .2s; }
 
   /* Responsive */
-  /* ─── Mobile Responsive ─────────────────────────────────────── */
+/* ─── Mobile Responsive ─────────────────────────────────────── */
   @media (max-width: 768px) {
     :root { --sidebar-w: 300px; }
 
@@ -249,22 +249,24 @@
 
     .main { margin-left: 0; }
 
-    /* 📱 MOVED TO BOTTOM FOR THUMBS */
+    /* 📱 THUMB-ZONE TOOLBAR (Fixed) */
     .controls-bar {
       position: fixed;
       top: auto;
       bottom: 0;
       left: 0;
       right: 0;
-      z-index: 100;
+      z-index: 400; /* Pushed super high so nothing blocks it */
       padding: 10px 12px;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* iPhone notch safe area */
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
       background: rgba(15, 10, 7, 0.95);
       backdrop-filter: blur(16px);
       border-top: 1px solid var(--ink-4);
       border-bottom: none;
       box-shadow: 0 -4px 24px rgba(0,0,0,0.8);
-      gap: 8px;
+      gap: 12px;
+      
+      /* Force horizontal scroll */
       overflow-x: auto;
       flex-wrap: nowrap;
       -webkit-overflow-scrolling: touch;
@@ -272,35 +274,37 @@
     }
     .controls-bar::-webkit-scrollbar { display: none; }
     
-    /* Make buttons taller for easier thumb tapping */
-    .ctrl-btn, .btn-play, .btn-icon-sm {
-      height: 48px;
-    }
-
+    /* 🛑 THE SQUISH FIX: Forces buttons to keep their full width so you can scroll to them */
+    .controls-bar > * { flex-shrink: 0; }
+    .ctrl-group, .controls-right { flex-shrink: 0; }
+    
+    .ctrl-btn, .btn-play, .btn-icon-sm { height: 48px; }
     .ctrl-label { display: none; }
-    .controls-right { margin-left: 0; flex-shrink: 0; }
+    .controls-right { margin-left: 0; display: flex; gap: 12px; }
     .ctrl-divider { flex-shrink: 0; }
 
     .song-header { padding: 16px 16px 12px; }
 
-    /* Ensure chords don't get trapped behind the new bottom toolbar */
     .chord-sheet {
       padding: 16px 16px;
       padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
     }
 
-    /* Move metronome flash to the top of the screen on mobile */
     .metronome-bar { 
       top: var(--nav-h); 
       bottom: auto; 
       left: 0; 
       height: 6px; 
       box-shadow: 0 2px 10px var(--amber);
+      z-index: 90;
+    }
+
+    /* 🛑 THE INVISIBLE SHIELD FIX: Move notifications up so they don't block clicks */
+    .toast-area {
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
     }
 
     .field-row { grid-template-columns: 1fr; }
-
-    /* Full-width buttons in modal footer on mobile */
     .modal-footer {
       flex-direction: column;
       padding: 12px 16px;
@@ -314,7 +318,6 @@
     .modal-body { padding: 14px 16px; }
     .modal-header { padding: 16px 16px 12px; }
 
-    /* Video panel smaller on mobile */
     .video-panel.open { max-height: 240px; }
     .video-inner { padding: 10px 12px; }
   }
