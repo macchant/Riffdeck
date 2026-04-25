@@ -986,7 +986,6 @@
   </div>
 </div>
 
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
@@ -997,6 +996,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyB1UDS2JIPd58H4fFVfHPJynptnsYmWN1g",
       authDomain: "riffdeck.firebaseapp.com",
+      databaseURL: "https://riffdeck-default-rtdb.firebaseio.com", /* <-- ADDED THIS: Crucial for Realtime Database */
       projectId: "riffdeck",
       storageBucket: "riffdeck.firebasestorage.app",
       messagingSenderId: "806680795500",
@@ -1004,56 +1004,55 @@
       measurementId: "G-NTG65E6M59"
     };
     
-    let db;
+    let db = null;
     let library = [];
     
-    // Initialize Firebase (Compat Version)
-    if (firebaseConfig.apiKey) {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-      
-      const setlistRef = db.ref('setlist');
-      setlistRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        library = data ? Object.values(data) : [];
-        document.getElementById('sync-dot').classList.add('online');
-        document.getElementById('sync-text').textContent = 'Live Sync Active';
-        renderSidebar();
-      }, (error) => {
-        document.getElementById('sync-text').textContent = 'Sync Error. Check Rules.';
-      });
-    } else {
-      document.getElementById('sync-text').textContent = 'Offline Mode';
-      const saved = localStorage.getItem('riffDeckData');
-      if (saved) {
-        library = JSON.parse(saved);
+    // SAFE INITIALIZATION: Try/Catch prevents silent crashes from breaking your buttons
+    try {
+      if (firebaseConfig.apiKey) {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        
+        const setlistRef = db.ref('setlist');
+        setlistRef.on('value', (snapshot) => {
+          const data = snapshot.val();
+          library = data ? Object.values(data) : [];
+          document.getElementById('sync-dot').classList.add('online');
+          document.getElementById('sync-text').textContent = 'Live Sync Active';
+          window.renderSidebar();
+        });
       }
-      renderSidebar();
+    } catch (error) {
+      console.error("Firebase Connection Error:", error);
+      document.getElementById('sync-text').textContent = 'Offline Mode (Check DB URL)';
+      const saved = localStorage.getItem('riffDeckData');
+      if (saved) library = JSON.parse(saved);
+      window.renderSidebar();
     }
 
     // Database Save/Remove
-    function saveToDatabase(newTrack) {
+    window.saveToDatabase = function(newTrack) {
       if (db) {
-        db.ref('setlist/' + newTrack.id).set(newTrack);
+        db.ref('setlist/' + newTrack.id).set(newTrack).catch(e => console.error(e));
       } else {
         const index = library.findIndex(t => t.id === newTrack.id);
         if (index > -1) library[index] = newTrack;
         else library.push(newTrack);
         localStorage.setItem('riffDeckData', JSON.stringify(library));
-        renderSidebar();
-        loadTrack(newTrack);
+        window.renderSidebar();
+        window.loadTrack(newTrack);
       }
-    }
+    };
 
-    function removeFromDatabase(id) {
+    window.removeFromDatabase = function(id) {
       if (db) {
-        db.ref('setlist/' + id).remove();
+        db.ref('setlist/' + id).remove().catch(e => console.error(e));
       } else {
         library = library.filter(t => t.id !== id);
         localStorage.setItem('riffDeckData', JSON.stringify(library));
-        renderSidebar();
+        window.renderSidebar();
       }
-    }
+    };
 
     /* ════ APP STATE & LOGIC ════ */
     window.currentTrack = null;
@@ -1075,29 +1074,29 @@
     const metroBtn = document.getElementById('metro-toggle');
     const visualBeat = document.getElementById('visual-beat');
 
-    /* ════ GLOBAL UI FUNCTIONS ════ */
+    /* ════ GLOBAL UI FUNCTIONS (100% Attached to Window) ════ */
     
-    function toggleMenu() {
+    window.toggleMenu = function() {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebar-overlay').classList.toggle('active');
-    }
+    };
 
-    function renderSidebar(filteredLib = library) {
+    window.renderSidebar = function(filteredLib = library) {
       setlistEl.innerHTML = '';
       filteredLib.forEach((track) => {
         const btn = document.createElement('button');
         btn.className = 'track-btn';
         if(window.currentTrack && window.currentTrack.id === track.id) btn.classList.add('active');
         btn.innerHTML = `<div class="track-title">${track.title}</div><div class="track-artist">${track.artist}</div>`;
-        btn.onclick = () => loadTrack(track);
+        btn.onclick = () => window.loadTrack(track);
         setlistEl.appendChild(btn);
       });
       
-      if(!window.currentTrack && filteredLib.length > 0) loadTrack(filteredLib[0]);
-      else if (library.length === 0) clearUI();
-    }
+      if(!window.currentTrack && filteredLib.length > 0) window.loadTrack(filteredLib[0]);
+      else if (library.length === 0) window.clearUI();
+    };
 
-    function toggleMiniVideo() {
+    window.toggleMiniVideo = function() {
       const panel = document.getElementById('video-panel');
       const btn = document.getElementById('mini-btn');
       const isMini = panel.classList.toggle('mini');
@@ -1107,21 +1106,21 @@
       } else {
           document.getElementById('tab-panel').style.paddingTop = "2rem";
       }
-    }
+    };
     
-    function handleSearch(query) {
+    window.handleSearch = function(query) {
       const q = query.toLowerCase().trim();
-      if (!q) { renderSidebar(library); return; }
+      if (!q) { window.renderSidebar(library); return; }
       const filtered = library.filter(t => 
         t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
       );
-      renderSidebar(filtered);
-    }
+      window.renderSidebar(filtered);
+    };
 
-    function loadTrack(track) {
+    window.loadTrack = function(track) {
       window.currentTrack = track;
       currentTranspose = 0;
-      stopScroll();
+      window.stopScroll();
       
       if (window.innerWidth <= 900) {
          document.getElementById('sidebar').classList.remove('open');
@@ -1138,55 +1137,55 @@
       uiBpm.textContent = track.bpm || '--';
       uiVideo.src = track.youtube_id ? `https://www.youtube.com/embed/${track.youtube_id}` : '';
       
-      renderTabs();
-      if(isMetroPlaying) { stopMetronome(); startMetronome(); }
-    }
+      window.renderTabs();
+      if(isMetroPlaying) { window.stopMetronome(); window.startMetronome(); }
+    };
 
-    function clearUI() {
+    window.clearUI = function() {
       window.currentTrack = null;
       uiTitle.textContent = "Vault is empty";
       uiBpm.textContent = "--";
       uiKey.textContent = "--";
       uiVideo.src = "";
       uiTabs.innerHTML = "Click '+ Add New Track' to begin.";
-    }
+    };
 
     /* ════ TRANSPOSE LOGIC ════ */
     const notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
     const noteMap = { 'C':0, 'C#':1, 'DB':1, 'D':2, 'D#':3, 'EB':3, 'E':4, 'F':5, 'F#':6, 'GB':6, 'G':7, 'G#':8, 'AB':8, 'A':9, 'A#':10, 'BB':10, 'B':11 };
 
-    function transposeNote(noteStr, steps) {
+    window.transposeNote = function(noteStr, steps) {
       if (!noteStr) return "";
       let idx = noteMap[noteStr.toUpperCase()];
       if (idx === undefined) return noteStr;
       let newIdx = (idx + steps) % 12;
       if (newIdx < 0) newIdx += 12;
       return notes[newIdx];
-    }
+    };
 
-    function transposeChord(chord, steps) {
+    window.transposeChord = function(chord, steps) {
       if (steps === 0) return chord;
       const regex = /^([A-G][#b]?)(.*)$/i;
       const match = chord.match(regex);
       if (!match) return chord;
-      let root = transposeNote(match[1], steps);
+      let root = window.transposeNote(match[1], steps);
       let mod = match[2] || "";
       if (mod.includes('/')) {
           let parts = mod.split('/');
-          let slashNote = transposeNote(parts[1], steps);
+          let slashNote = window.transposeNote(parts[1], steps);
           mod = parts[0] + '/' + slashNote;
       }
       return root + mod;
-    }
+    };
 
-    function renderTabs() {
+    window.renderTabs = function() {
       if(!window.currentTrack) return;
       let formattedTabs = window.currentTrack.content
         .replace(/\[(.*?)\]/g, (match, innerText) => {
             if (['intro', 'verse', 'chorus', 'pre-chorus', 'solo', 'bridge', 'outro', 'instrumental'].some(s => innerText.toLowerCase().includes(s))) {
                 return `<span class="section-tag">${innerText}</span>`;
             } else {
-                let tChord = transposeChord(innerText, currentTranspose);
+                let tChord = window.transposeChord(innerText, currentTranspose);
                 return `<span class="chord">${tChord}</span>`;
             }
         });
@@ -1194,19 +1193,19 @@
 
       let baseKeyMatch = (window.currentTrack.key || "").match(/^([A-G][#b]?)(.*)$/i);
       if (baseKeyMatch) {
-          let tKey = transposeChord(baseKeyMatch[1], currentTranspose) + baseKeyMatch[2];
+          let tKey = window.transposeChord(baseKeyMatch[1], currentTranspose) + baseKeyMatch[2];
           let tString = currentTranspose === 0 ? "" : currentTranspose > 0 ? ` (+${currentTranspose})` : ` (${currentTranspose})`;
           uiKey.textContent = tKey + tString;
       } else {
           uiKey.textContent = window.currentTrack.key || "--";
       }
-    }
+    };
 
-    document.getElementById('btn-trans-up').addEventListener('click', () => { currentTranspose++; renderTabs(); });
-    document.getElementById('btn-trans-down').addEventListener('click', () => { currentTranspose--; renderTabs(); });
+    document.getElementById('btn-trans-up').addEventListener('click', () => { currentTranspose++; window.renderTabs(); });
+    document.getElementById('btn-trans-down').addEventListener('click', () => { currentTranspose--; window.renderTabs(); });
 
     /* ════ METRONOME ════ */
-    function startMetronome() {
+    window.startMetronome = function() {
       const bpm = window.currentTrack ? window.currentTrack.bpm : 120;
       if (!bpm || bpm <= 0) return;
       isMetroPlaying = true;
@@ -1215,21 +1214,21 @@
         visualBeat.classList.add('tick');
         setTimeout(() => visualBeat.classList.remove('tick'), 100);
       }, 60000 / bpm);
-    }
+    };
     
-    function stopMetronome() {
+    window.stopMetronome = function() {
       isMetroPlaying = false;
       metroBtn.classList.remove('active');
       clearInterval(metroInterval);
-    }
+    };
     
-    metroBtn.addEventListener('click', () => { isMetroPlaying ? stopMetronome() : startMetronome(); });
+    metroBtn.addEventListener('click', () => { isMetroPlaying ? window.stopMetronome() : window.startMetronome(); });
 
     /* ════ AUTO SCROLL ════ */
-    function toggleScroll() {
+    window.toggleScroll = function() {
       const btn = document.getElementById('btn-scroll-play');
       if(isScrolling) {
-        stopScroll();
+        window.stopScroll();
       } else {
         isScrolling = true;
         btn.textContent = "STOP";
@@ -1237,24 +1236,24 @@
           tabPanel.scrollTop += scrollSpeed;
         }, 50);
       }
-    }
+    };
     
-    function stopScroll() {
+    window.stopScroll = function() {
       isScrolling = false;
       clearInterval(scrollInterval);
       const btn = document.getElementById('btn-scroll-play');
       btn.textContent = "PLAY";
-    }
+    };
     
-    function adjustScroll(dir) {
+    window.adjustScroll = function(dir) {
       scrollSpeed += dir;
       if(scrollSpeed < 1) scrollSpeed = 1;
       if(scrollSpeed > 10) scrollSpeed = 10;
-      if(isScrolling) { stopScroll(); toggleScroll(); }
-    }
+      if(isScrolling) { window.stopScroll(); window.toggleScroll(); }
+    };
 
     /* ════ THEATER MODE ════ */
-    function toggleVideo() {
+    window.toggleVideo = function() {
       isVideoHidden = !isVideoHidden;
       const panel = document.getElementById('video-panel');
       const btn = document.getElementById('toggle-video-btn');
@@ -1267,12 +1266,12 @@
         btn.classList.remove('active');
         if(window.currentTrack) uiVideo.src = window.currentTrack.youtube_id ? `https://www.youtube.com/embed/${window.currentTrack.youtube_id}` : '';
       }
-    }
+    };
 
     /* ════ EDITOR MODAL ════ */
     const modal = document.getElementById('editor-modal');
     
-    function openEditor(id = null) {
+    window.openEditor = function(id = null) {
       document.getElementById('delete-btn').style.display = id ? 'block' : 'none';
       document.getElementById('modal-title').textContent = id ? 'Edit Track' : 'Add New Track';
       
@@ -1294,11 +1293,11 @@
         document.getElementById('edit-content').value = '';
       }
       modal.classList.add('active');
-    }
+    };
 
-    function closeEditor() { modal.classList.remove('active'); }
+    window.closeEditor = function() { modal.classList.remove('active'); };
 
-    function saveSong() {
+    window.saveSong = function() {
       const id = document.getElementById('edit-id').value;
       const newTrack = {
         id: id ? parseInt(id) : Date.now(),
@@ -1310,17 +1309,27 @@
         content: document.getElementById('edit-content').value
       };
       
-      saveToDatabase(newTrack);
-      closeEditor();
-    }
+      window.saveToDatabase(newTrack);
+      window.closeEditor();
+    };
 
-    function deleteSong() {
+    window.deleteSong = function() {
       if(!confirm("Are you sure you want to delete this track?")) return;
       const id = parseInt(document.getElementById('edit-id').value);
-      removeFromDatabase(id);
+      window.removeFromDatabase(id);
       window.currentTrack = null;
-      closeEditor();
+      window.closeEditor();
+    };
+
+    // Load initial data on startup
+    if (!db) {
+      const saved = localStorage.getItem('riffDeckData');
+      if (saved) {
+        library = JSON.parse(saved);
+        window.renderSidebar();
+      }
     }
   </script>
 </body>
 </html>
+
