@@ -237,34 +237,28 @@
 /* ─── Mobile Responsive ─────────────────────────────────────── */
   @media (max-width: 768px) {
     :root { --sidebar-w: 300px; }
-
     .btn-menu { display: flex; }
-
-    .sidebar {
-      transform: translateX(-100%);
-      box-shadow: 20px 0 60px rgba(0,0,0,.5);
-      top: var(--nav-h); bottom: 0;
-    }
+    .sidebar { transform: translateX(-100%); box-shadow: 20px 0 60px rgba(0,0,0,.5); top: var(--nav-h); bottom: 0; }
     .sidebar.open { transform: none; }
-
     .main { margin-left: 0; }
 
-    /* 📱 THUMB-ZONE TOOLBAR (Fixed) */
+    /* 📱 THUMB-ZONE TOOLBAR (The Ultimate Squish Fix) */
     .controls-bar {
       position: fixed;
       top: auto;
       bottom: 0;
       left: 0;
       right: 0;
-      z-index: 400; /* Pushed super high so nothing blocks it */
-      padding: 10px 12px;
+      z-index: 9999; /* Absolute top layer */
+      padding: 10px 16px;
       padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-      background: rgba(15, 10, 7, 0.95);
+      background: rgba(15, 10, 7, 0.98); /* Slightly darker to prevent background bleeding */
       backdrop-filter: blur(16px);
       border-top: 1px solid var(--ink-4);
-      border-bottom: none;
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.8);
-      gap: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 16px; /* Bigger gap between the different groups */
       
       /* Force horizontal scroll */
       overflow-x: auto;
@@ -274,50 +268,66 @@
     }
     .controls-bar::-webkit-scrollbar { display: none; }
     
-    /* 🛑 THE SQUISH FIX: Forces buttons to keep their full width so you can scroll to them */
-    .controls-bar > * { flex-shrink: 0; }
-    .ctrl-group, .controls-right { flex-shrink: 0; }
+    /* 🛑 FORCE EVERYTHING TO KEEP ITS TRUE SIZE 🛑 */
+    .controls-bar > * { flex-shrink: 0 !important; }
     
-    .ctrl-btn, .btn-play, .btn-icon-sm { height: 48px; }
+    .ctrl-group { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; /* Space between + and - buttons */
+      flex-shrink: 0 !important; 
+    }
+    
+    .controls-right { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      margin-left: 0; 
+      flex-shrink: 0 !important; 
+    }
+
+    /* Protect the individual buttons from crushing */
+    .ctrl-btn { 
+      flex-shrink: 0 !important; 
+      min-width: 48px; /* Force minimum width for fat thumbs */
+      height: 48px; 
+    }
+
+    /* Protect buttons with text inside them */
+    .btn-play, .btn-icon-sm { 
+      flex-shrink: 0 !important; 
+      height: 48px; 
+      white-space: nowrap !important; /* Stops text from wrapping onto a second line */
+      min-width: max-content; 
+    }
+
+    /* Hide unnecessary labels to save space */
     .ctrl-label { display: none; }
-    .controls-right { margin-left: 0; display: flex; gap: 12px; }
-    .ctrl-divider { flex-shrink: 0; }
+    .ctrl-divider { flex-shrink: 0 !important; }
 
+    /* Fix spacing for the rest of the app */
     .song-header { padding: 16px 16px 12px; }
-
     .chord-sheet {
       padding: 16px 16px;
       padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
     }
-
     .metronome-bar { 
-      top: var(--nav-h); 
-      bottom: auto; 
-      left: 0; 
-      height: 6px; 
-      box-shadow: 0 2px 10px var(--amber);
-      z-index: 90;
+      top: var(--nav-h); bottom: auto; left: 0; height: 6px; 
+      box-shadow: 0 2px 10px var(--amber); z-index: 90;
     }
+    .toast-area { bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
 
-    /* 🛑 THE INVISIBLE SHIELD FIX: Move notifications up so they don't block clicks */
-    .toast-area {
-      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-    }
-
+    /* Modal adjustments */
     .field-row { grid-template-columns: 1fr; }
     .modal-footer {
-      flex-direction: column;
-      padding: 12px 16px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-      gap: 8px;
+      flex-direction: column; padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); gap: 8px;
     }
     .btn-danger { margin-right: 0; width: 100%; justify-content: center; order: 3; }
     .btn-secondary { width: 100%; justify-content: center; order: 2; }
     .btn-primary { width: 100%; justify-content: center; order: 1; }
-
     .modal-body { padding: 14px 16px; }
     .modal-header { padding: 16px 16px 12px; }
-
     .video-panel.open { max-height: 240px; }
     .video-inner { padding: 10px 12px; }
   }
