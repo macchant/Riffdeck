@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RiffDeck | Online Setlist Sync</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  /* ── LES PAUL DARKBURST THEME ── */
+  :root {
+    --burst-center: #8c3b0c;
+    --burst-mid: #4a1501;
+    --burst-edge: #0a0301;
+    
+    --panel-bg: rgba(20, 8, 4, 0.7);
+    --panel-border: rgba(212, 175, 55, 0.2);
+    
+    --gold-bright: #d4af37;
+    --gold-dim: #997a00;
+    --cream: #fbf5e9;
+    --cream-dim: #c2baaa;
+    
+    --fretboard: #1a1a1a;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    background: radial-gradient(circle at 50% 30%, var(--burst-center) 0%, var(--burst-mid) 45%, var(--burst-edge) 100%);
+    background-attachment: fixed;
+    color: var(--cream); font-family: 'Inter', sans-serif; 
+    height: 100vh; overflow: hidden; display: flex; 
+  }
+  button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+  
+  /* Sidebar */
+  .sidebar { 
+    width: 320px; background: var(--panel-bg); border-right: 1px solid var(--panel-border); 
+    display: flex; flex-direction: column; z-index: 10; backdrop-filter: blur(10px);
+  }
+  .brand { 
+    padding: 1.5rem; font-size: 1.6rem; font-family: 'Playfair Display', serif; font-weight: 800; 
+    letter-spacing: 0.05em; border-bottom: 1px solid var(--panel-border); 
+    display: flex; justify-content: space-between; align-items: center; color: var(--gold-bright);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+  
+  .setlist { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .track-btn { 
+    background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 1rem; 
+    text-align: left; color: var(--cream-dim); transition: all 0.2s; position: relative;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .track-btn:hover { background: rgba(212, 175, 55, 0.05); color: var(--cream); }
+  .track-btn.active { 
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), transparent); 
+    border-left: 3px solid var(--gold-bright); color: var(--gold-bright); border-bottom-color: transparent;
+  }
+  .track-title { font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; font-family: 'Playfair Display', serif; }
+  .track-artist { font-size: 0.8rem; opacity: 0.8; font-family: 'Inter', sans-serif; }
+  
+  /* Sidebar Actions */
+  .sidebar-actions { padding: 1rem; border-top: 1px solid var(--panel-border); display: flex; flex-direction: column; gap: 0.5rem; background: var(--burst-edge); }
+  .btn-primary { 
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim)); color: #111; 
+    padding: 0.8rem; border-radius: 4px; font-weight: 800; text-transform: uppercase; 
+    letter-spacing: 0.05em; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  /* Main Stage */
+  .main-stage { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  
+  /* Header Info */
+  .track-header { 
+    padding: 1rem 2rem; border-bottom: 1px solid var(--panel-border); display: flex; 
+    justify-content: space-between; align-items: center; background: var(--panel-bg); 
+    flex-wrap: wrap; gap: 1rem; backdrop-filter: blur(10px);
+  }
+  .info-group { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+  .info-stat { display: flex; flex-direction: column; }
+  .info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold-dim); margin-bottom: 2px; font-weight: 600;}
+  .info-val { font-size: 1.1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--cream); }
+  
+  /* Controls */
+  .control-wrap { display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
+  .trans-btn, .scroll-btn { background: transparent; color: var(--gold-bright); padding: 0.3rem 0.8rem; font-weight: 800; transition: 0.2s; }
+  .trans-btn:hover, .scroll-btn:hover { background: rgba(212, 175, 55, 0.2); }
+  .val-display { padding: 0 0.8rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; border-left: 1px solid var(--panel-border); border-right: 1px solid var(--panel-border); min-width: 40px; text-align: center; display: flex; align-items: center; justify-content: center; color: var(--cream); background: transparent; }
+  
+  .toolbar { display: flex; gap: 1rem; align-items: center; }
+  .tool-btn { 
+    background: transparent; color: var(--cream); padding: 0.5rem 1rem; 
+    border-radius: 4px; font-weight: 600; font-size: 0.8rem; transition: 0.2s; 
+    border: 1px solid var(--panel-border); display: flex; align-items: center; gap: 0.5rem; 
+  }
+  .tool-btn:hover { background: rgba(255,255,255,0.1); }
+  .tool-btn.active { background: var(--gold-dim); color: #111; border-color: var(--gold-bright); }
+  .visual-beat { width: 12px; height: 12px; border-radius: 50%; background: #333; transition: 0.1s; border: 1px solid var(--gold-dim); }
+  .visual-beat.tick { background: var(--gold-bright); transform: scale(1.5); box-shadow: 0 0 10px var(--gold-bright); }
+
+  /* Content Area */
+  .content-area { flex: 1; display: flex; overflow: hidden; transition: 0.3s; }
+  .video-panel { width: 40%; border-right: 1px solid var(--panel-border); padding: 1.5rem; display: flex; flex-direction: column; background: rgba(0,0,0,0.3); transition: 0.3s; }
+  .video-panel.hidden { width: 0; padding: 0; border: none; overflow: hidden; opacity: 0; }
+  .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden; border: 1px solid var(--gold-dim); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+  iframe { width: 100%; height: 100%; border: none; }
+  
+  /* Tab Sheet */
+  .tab-panel { flex: 1; padding: 2rem 10%; overflow-y: auto; background: transparent; scroll-behavior: smooth; }
+  pre { font-family: 'JetBrains Mono', monospace; font-size: 1rem; line-height: 1.8; color: var(--cream); white-space: pre-wrap; padding-bottom: 50vh; }
+  
+  .chord { 
+    color: var(--burst-edge); font-weight: 700; background: var(--gold-bright); 
+    padding: 0px 4px; border-radius: 2px; font-size: 0.9em;
+    display: inline-block; transform: translateY(-2px);
+    box-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+  }
+  .section-tag { 
+    color: var(--gold-bright); font-weight: 800; font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; display: inline-block; margin-top: 1.5rem; margin-bottom: 0.2rem; 
+    border-bottom: 1px solid var(--panel-border); width: 100%;
+  }
+
+  /* Editor Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-box { background: var(--fretboard); border: 1px solid var(--gold-dim); border-radius: 8px; width: 90%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: translateY(20px); transition: 0.3s; }
+  .modal-overlay.active .modal-box { transform: translateY(0); }
+  .modal-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; color: var(--gold-bright); font-family: 'Playfair Display', serif; }
+  .modal-body { padding: 1.5rem; overflow-y: auto; display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+  .full-width { grid-column: span 2; }
+  .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .input-group label { font-size: 0.8rem; color: var(--cream-dim); font-weight: 600; }
+  .input-group input, .input-group textarea { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 4px; color: var(--cream); font-family: 'Inter', sans-serif; outline: none; }
+  .input-group input:focus, .input-group textarea:focus { border-color: var(--gold-bright); }
+  .input-group textarea { height: 250px; font-family: 'JetBrains Mono', monospace; resize: vertical; }
+  .modal-footer { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end; gap: 1rem; }
+  
+  .delete-btn { background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444; margin-right: auto; padding: 0.8rem 1.5rem; border-radius: 4px; font-weight: 600; }
+  .delete-btn:hover { background: #ff4444; color: #fff; }
+
+  /* Connecting Status */
+  .sync-status { padding: 0.5rem 1rem; text-align: center; font-size: 0.75rem; color: var(--gold-dim); background: var(--burst-edge); font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4444; }
+  .sync-dot.online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+</style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">RiffDeck</div>
+    <div class="sync-status" id="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">Connecting to Vault...</span></div>
+    <div class="setlist" id="setlist-container"></div>
+    <div class="sidebar-actions">
+      <button class="btn-primary" onclick="openEditor()">+ Add New Track</button>
+    </div>
+  </aside>
+
+  <main class="main-stage">
+    <header class="track-header">
+      <div class="info-group">
+        <div class="info-stat" style="min-width: 200px;">
+          <span class="info-label">Title</span>
+          <span class="info-val" id="ui-title">Welcome to RiffDeck</span>
+        </div>
+        
+        <div class="info-stat">
+          <span class="info-label">Transpose</span>
+          <div class="control-wrap">
+            <button class="trans-btn" id="btn-trans-down">-</button>
+            <span class="val-display" id="ui-key">--</span>
+            <button class="trans-btn" id="btn-trans-up">+</button>
+          </div>
+        </div>
+
+        <div class="info-stat">
+          <span class="info-label">BPM</span>
+          <span class="info-val" id="ui-bpm">--</span>
+        </div>
+        
+        <div class="info-stat">
+          <span class="info-label">Auto-Scroll</span>
+          <div class="control-wrap">
+            <button class="scroll-btn" onclick="adjustScroll(-1)">-</button>
+            <button class="val-display" id="btn-scroll-play" onclick="toggleScroll()" style="width:60px; color:var(--gold-bright); cursor:pointer">PLAY</button>
+            <button class="scroll-btn" onclick="adjustScroll(1)">+</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="toolbar">
+        <button class="tool-btn" id="toggle-video-btn" onclick="toggleVideo()">
+          <span id="tv-icon">📺</span> Video
+        </button>
+        <div style="width:1px; height:20px; background:var(--panel-border); margin:0 0.5rem"></div>
+        <button class="tool-btn" id="metro-toggle">Metronome</button>
+        <div class="visual-beat" id="visual-beat"></div>
+        <button class="tool-btn" onclick="openEditor(currentTrack.id)">✏️ Edit Track</button>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <div class="video-panel" id="video-panel">
+        <span class="info-label" style="margin-bottom: 0.8rem">Reference Track</span>
+        <div class="video-wrapper">
+          <iframe id="ui-video" src="" allowfullscreen></iframe>
+        </div>
+      </div>
+      
+      <div class="tab-panel" id="tab-panel">
+        <pre id="ui-tabs">Connected to Firebase! Click '+ Add New Track' to begin building your live setlist.</pre>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="editor-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 style="font-size:1.2rem;" id="modal-title">Add New Track</h2>
+        <button onclick="closeEditor()" style="background:transparent; color:var(--cream-dim); font-size:1.5rem;">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
+        <div class="input-group">
+          <label>Song Title</label>
+          <input type="text" id="edit-title" placeholder="e.g. Starlight">
+        </div>
+        <div class="input-group">
+          <label>Artist</label>
+          <input type="text" id="edit-artist" placeholder="e.g. Muse">
+        </div>
+        <div class="input-group">
+          <label>Original Key</label>
+          <input type="text" id="edit-key" placeholder="e.g. B">
+        </div>
+        <div class="input-group">
+          <label>BPM</label>
+          <input type="number" id="edit-bpm" placeholder="e.g. 122">
+        </div>
+        <div class="input-group full-width">
+          <label>YouTube Video ID (Optional)</label>
+          <input type="text" id="edit-yt" placeholder="e.g. Pgum6OT_VH8 (The part after v=)">
+        </div>
+        <div class="input-group full-width">
+          <label>Lyrics & Chords</label>
+          <textarea id="edit-content" placeholder="Put chords in brackets like this: [C] Hello [Am] World... Use [Chorus] or [Verse] for sections."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="delete-btn" id="delete-btn" onclick="deleteSong()" style="display:none">Delete Track</button>
+        <button class="tool-btn" onclick="closeEditor()">Cancel</button>
+        <button class="btn-primary" onclick="saveSong()">Save to RiffDeck</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1UDS2JIPd58H4fFVfHPJynptnsYmWN1g",
+    authDomain: "riffdeck.firebaseapp.com",
+    projectId: "riffdeck",
+    storageBucket: "riffdeck.firebasestorage.app",
+    messagingSenderId: "806680795500",
+    appId: "1:806680795500:web:c1469f06f0bb98876f7b49",
+    measurementId: "G-NTG65E6M59"
+  };
+
+  let db;
+  let library = [];
+  
+  // Initialize Firebase
+  if (firebaseConfig.apiKey) {
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    db = getDatabase(app);
+    
+    // Listen for real-time changes from your bandmates
+    const setlistRef = ref(db, 'setlist');
+    onValue(setlistRef, (snapshot) => {
+      const data = snapshot.val();
+      library = data ? Object.values(data) : [];
+      document.getElementById('sync-dot').classList.add('online');
+      document.getElementById('sync-text').textContent = 'Live Sync Active';
+      renderSidebar();
+    }, (error) => {
+      document.getElementById('sync-text').textContent = 'Sync Error. Check Rules.';
+    });
+  } else {
+    document.getElementById('sync-text').textContent = 'Offline Mode';
+    renderSidebar();
+  }
+
+  // Make functions global so HTML buttons can trigger them
+  window.saveToDatabase = function(newTrack) {
+    if (db) {
+      set(ref(db, 'setlist/' + newTrack.id), newTrack);
+    } 
+  };
+
+  window.removeFromDatabase = function(id) {
+    if (db) {
+      remove(ref(db, 'setlist/' + id));
+    } 
+  };
+
+  /* ════ APP STATE & LOGIC ════ */
+  window.currentTrack = null;
+  let currentTranspose = 0;
+  let isMetroPlaying = false;
+  let metroInterval = null;
+  let isVideoHidden = false;
+  let scrollInterval = null;
+  let scrollSpeed = 1; 
+  let isScrolling = false;
+
+  const setlistEl = document.getElementById('setlist-container');
+  const uiTitle = document.getElementById('ui-title');
+  const uiKey = document.getElementById('ui-key');
+  const uiBpm = document.getElementById('ui-bpm');
+  const uiVideo = document.getElementById('ui-video');
+  const uiTabs = document.getElementById('ui-tabs');
+  const tabPanel = document.getElementById('tab-panel');
+  const metroBtn = document.getElementById('metro-toggle');
+  const visualBeat = document.getElementById('visual-beat');
+
+  window.renderSidebar = function() {
+    setlistEl.innerHTML = '';
+    library.forEach((track) => {
+      const btn = document.createElement('button');
+      btn.className = 'track-btn';
+      if(window.currentTrack && window.currentTrack.id === track.id) btn.classList.add('active');
+      btn.innerHTML = `<div class="track-title">${track.title}</div><div class="track-artist">${track.artist}</div>`;
+      btn.onclick = () => window.loadTrack(track);
+      setlistEl.appendChild(btn);
+    });
+    
+    if(!window.currentTrack && library.length > 0) window.loadTrack(library[0]);
+    else if (library.length === 0) clearUI();
+  }
+
+  window.loadTrack = function(track) {
+    window.currentTrack = track;
+    currentTranspose = 0;
+    window.stopScroll();
+    
+    document.querySelectorAll('.track-btn').forEach(b => b.classList.remove('active'));
+    const btns = setlistEl.children;
+    for(let i=0; i<library.length; i++) {
+      if(library[i].id === track.id && btns[i]) btns[i].classList.add('active');
+    }
+    
+    uiTitle.textContent = `${track.title} - ${track.artist}`;
+    uiBpm.textContent = track.bpm || '--';
+    uiVideo.src = track.youtube_id ? `https://www.youtube.com/embed/${track.youtube_id}` : '';
+    
+    window.renderTabs();
+    if(isMetroPlaying) { window.stopMetronome(); window.startMetronome(); }
+  }
+
+  function clearUI() {
+    window.currentTrack = null;
+    uiTitle.textContent = "Vault is empty";
+    uiBpm.textContent = "--";
+    uiKey.textContent = "--";
+    uiVideo.src = "";
+    uiTabs.innerHTML = "Click '+ Add New Track' to begin.";
+  }
+
+  /* ════ TRANSPOSE LOGIC ════ */
+  const notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+  const noteMap = { 'C':0, 'C#':1, 'DB':1, 'D':2, 'D#':3, 'EB':3, 'E':4, 'F':5, 'F#':6, 'GB':6, 'G':7, 'G#':8, 'AB':8, 'A':9, 'A#':10, 'BB':10, 'B':11 };
+
+  function transposeNote(noteStr, steps) {
+    if (!noteStr) return "";
+    let idx = noteMap[noteStr.toUpperCase()];
+    if (idx === undefined) return noteStr;
+    let newIdx = (idx + steps) % 12;
+    if (newIdx < 0) newIdx += 12;
+    return notes[newIdx];
+  }
+
+  function transposeChord(chord, steps) {
+    if (steps === 0) return chord;
+    const regex = /^([A-G][#b]?)(.*)$/i;
+    const match = chord.match(regex);
+    if (!match) return chord;
+    let root = transposeNote(match[1], steps);
+    let mod = match[2] || "";
+    if (mod.includes('/')) {
+        let parts = mod.split('/');
+        let slashNote = transposeNote(parts[1], steps);
+        mod = parts[0] + '/' + slashNote;
+    }
+    return root + mod;
+  }
+
+  window.renderTabs = function() {
+    if(!window.currentTrack) return;
+    let formattedTabs = window.currentTrack.content
+      .replace(/\[(.*?)\]/g, (match, innerText) => {
+          if (['intro', 'verse', 'chorus', 'pre-chorus', 'solo', 'bridge', 'outro'].some(s => innerText.toLowerCase().includes(s))) {
+              return `<span class="section-tag">${innerText}</span>`;
+          } else {
+              let tChord = transposeChord(innerText, currentTranspose);
+              return `<span class="chord">${tChord}</span>`;
+          }
+      });
+    uiTabs.innerHTML = formattedTabs;
+
+    let baseKeyMatch = (window.currentTrack.key || "").match(/^([A-G][#b]?)(.*)$/i);
+    if (baseKeyMatch) {
+        let tKey = transposeChord(baseKeyMatch[1], currentTranspose) + baseKeyMatch[2];
+        let tString = currentTranspose === 0 ? "" : currentTranspose > 0 ? ` (+${currentTranspose})` : ` (${currentTranspose})`;
+        uiKey.textContent = tKey + tString;
+    } else {
+        uiKey.textContent = window.currentTrack.key || "--";
+    }
+  }
+
+  document.getElementById('btn-trans-up').addEventListener('click', () => { currentTranspose++; window.renderTabs(); });
+  document.getElementById('btn-trans-down').addEventListener('click', () => { currentTranspose--; window.renderTabs(); });
+
+  /* ════ METRONOME ════ */
+  window.startMetronome = function() {
+    const bpm = window.currentTrack ? window.currentTrack.bpm : 120;
+    if (!bpm || bpm <= 0) return;
+    isMetroPlaying = true;
+    metroBtn.classList.add('active');
+    metroInterval = setInterval(() => {
+      visualBeat.classList.add('tick');
+      setTimeout(() => visualBeat.classList.remove('tick'), 100);
+    }, 60000 / bpm);
+  }
+  window.stopMetronome = function() {
+    isMetroPlaying = false;
+    metroBtn.classList.remove('active');
+    clearInterval(metroInterval);
+  }
+  metroBtn.addEventListener('click', () => { isMetroPlaying ? window.stopMetronome() : window.startMetronome(); });
+
+  /* ════ AUTO SCROLL ════ */
+  window.toggleScroll = function() {
+    const btn = document.getElementById('btn-scroll-play');
+    if(isScrolling) {
+      window.stopScroll();
+    } else {
+      isScrolling = true;
+      btn.textContent = "STOP";
+      scrollInterval = setInterval(() => {
+        tabPanel.scrollTop += scrollSpeed;
+      }, 50);
+    }
+  }
+  window.stopScroll = function() {
+    isScrolling = false;
+    clearInterval(scrollInterval);
+    const btn = document.getElementById('btn-scroll-play');
+    btn.textContent = "PLAY";
+  }
+  window.adjustScroll = function(dir) {
+    scrollSpeed += dir;
+    if(scrollSpeed < 1) scrollSpeed = 1;
+    if(scrollSpeed > 10) scrollSpeed = 10;
+    if(isScrolling) { window.stopScroll(); window.toggleScroll(); }
+  }
+
+  /* ════ THEATER MODE ════ */
+  window.toggleVideo = function() {
+    isVideoHidden = !isVideoHidden;
+    const panel = document.getElementById('video-panel');
+    const btn = document.getElementById('toggle-video-btn');
+    if(isVideoHidden) {
+      panel.classList.add('hidden');
+      btn.classList.add('active');
+      uiVideo.src = ""; 
+    } else {
+      panel.classList.remove('hidden');
+      btn.classList.remove('active');
+      if(window.currentTrack) uiVideo.src = window.currentTrack.youtube_id ? `https://www.youtube.com/embed/${window.currentTrack.youtube_id}` : '';
+    }
+  }
+
+  /* ════ EDITOR MODAL ════ */
+  const modal = document.getElementById('editor-modal');
+  window.openEditor = function(id = null) {
+    document.getElementById('delete-btn').style.display = id ? 'block' : 'none';
+    document.getElementById('modal-title').textContent = id ? 'Edit Track' : 'Add New Track';
+    
+    if (id && window.currentTrack) {
+      document.getElementById('edit-id').value = window.currentTrack.id;
+      document.getElementById('edit-title').value = window.currentTrack.title;
+      document.getElementById('edit-artist').value = window.currentTrack.artist;
+      document.getElementById('edit-key').value = window.currentTrack.key;
+      document.getElementById('edit-bpm').value = window.currentTrack.bpm;
+      document.getElementById('edit-yt').value = window.currentTrack.youtube_id;
+      document.getElementById('edit-content').value = window.currentTrack.content;
+    } else {
+      document.getElementById('edit-id').value = '';
+      document.getElementById('edit-title').value = '';
+      document.getElementById('edit-artist').value = '';
+      document.getElementById('edit-key').value = '';
+      document.getElementById('edit-bpm').value = '';
+      document.getElementById('edit-yt').value = '';
+      document.getElementById('edit-content').value = '';
+    }
+    modal.classList.add('active');
+  }
+
+  window.closeEditor = function() { modal.classList.remove('active'); }
+
+  window.saveSong = function() {
+    const id = document.getElementById('edit-id').value;
+    const newTrack = {
+      id: id ? parseInt(id) : Date.now(),
+      title: document.getElementById('edit-title').value || 'Untitled',
+      artist: document.getElementById('edit-artist').value || 'Unknown',
+      key: document.getElementById('edit-key').value,
+      bpm: parseInt(document.getElementById('edit-bpm').value) || 0,
+      youtube_id: document.getElementById('edit-yt').value,
+      content: document.getElementById('edit-content').value
+    };
+    
+    window.saveToDatabase(newTrack);
+    window.closeEditor();
+  }
+
+  window.deleteSong = function() {
+    if(!confirm("Are you sure you want to delete this track?")) return;
+    const id = parseInt(document.getElementById('edit-id').value);
+    window.removeFromDatabase(id);
+    window.currentTrack = null;
+    window.closeEditor();
+  }
+</script>
+</body>
+</html>

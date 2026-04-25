@@ -1,0 +1,5 @@
+### Repository Checklist
+To make your repository look fully complete on GitHub, make sure you upload these three files:
+1. `index.html` (This is your main `riffdeck.html` file, just renamed so GitHub Pages automatically loads it as the homepage).
+2. `README.md` (The text provided above).
+3. `LICENSE` (The MIT License text we generated earlier).
