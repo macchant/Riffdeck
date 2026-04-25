@@ -986,6 +986,7 @@
   </div>
 </div>
 
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -1004,383 +1005,319 @@
   };
   
   let db;
+  let library = [];
+  
   // Initialize Firebase
   if (firebaseConfig.apiKey) {
     const app = initializeApp(firebaseConfig);
     db = getDatabase(app);
-  }
-
-  /* ─── State ──────────────────────────────────────────── */
-  let tracks = [];
-  let currentId = null;
-  let transpose = 0;
-  let localBpmOffset = 0;
-  let isPlaying = false;
-  let scrollTimer = null;
-  let metronomeTimer = null;
-  let videoOpen = false;
-
-  /* ─── Elements ───────────────────────────────────────── */
-  const el = id => document.getElementById(id);
-  const sidebar = el('sidebar');
-  const setlist = el('setlist');
-  const chordContent = el('chordContent');
-  
-  // Status Sync UI
-  const syncDot = document.querySelector('.status-dot');
-  const syncText = el('sync-text');
-
-  // Stage UI
-  const songTitle = el('songTitle');
-  const songArtist = el('songArtist');
-  const songBadges = el('songBadges');
-  
-  // Controls
-  const transposeVal = el('transposeVal');
-  const bpmVal = el('bpmVal');
-  const btnPlay = el('btnPlay');
-  const btnMetronome = el('btnMetronome');
-  const metronomeBar = el('metronomeBar');
-  const metronomeFill = el('metronomeFill');
-  const videoFrame = el('videoFrame');
-  const videoPanel = el('videoPanel');
-  const btnVideoToggle = el('btnVideoToggle');
-
-  // Modal
-  const modal = el('modal');
-  const editId = el('editId');
-  const fieldTitle = el('fieldTitle');
-  const fieldArtist = el('fieldArtist');
-  const fieldKey = el('fieldKey');
-  const fieldBpm = el('fieldBpm');
-  const fieldVideoId = el('fieldVideoId');
-  const fieldLyrics = el('fieldLyrics');
-
-  /* ─── Data Management (Firebase + Local Fallback) ────── */
-  function load() {
-    if (db) {
-      const setlistRef = ref(db, 'setlist');
-      onValue(setlistRef, (snapshot) => {
-        const data = snapshot.val();
-        tracks = data ? Object.values(data) : [];
-        
-        // Update connection status UI
-        syncDot.classList.remove('offline');
-        if(syncText) syncText.textContent = 'Sync Active';
-
-        renderSetlist();
-        if (tracks.length > 0 && !currentId) {
-          selectTrack(tracks[0].id);
-        } else if (tracks.length === 0) {
-          currentId = null;
-          renderStage();
-        } else {
-          renderStage(); // Refresh current track if it was edited remotely
-        }
-      }, (error) => {
-        syncDot.classList.add('offline');
-        if(syncText) syncText.textContent = 'Offline';
-      });
-    } else {
-      // LocalStorage fallback if Firebase is down
-      const data = localStorage.getItem('riffdeck_tracks');
-      if (data) { tracks = JSON.parse(data); }
-      syncDot.classList.add('offline');
-      if(syncText) syncText.textContent = 'Local Mode';
-      renderSetlist();
-      if (tracks.length > 0) selectTrack(tracks[0].id);
+    
+    const setlistRef = ref(db, 'setlist');
+    onValue(setlistRef, (snapshot) => {
+      const data = snapshot.val();
+      library = data ? Object.values(data) : [];
+      document.getElementById('sync-dot').classList.add('online');
+      document.getElementById('sync-text').textContent = 'Live Sync Active';
+      window.renderSidebar();
+    }, (error) => {
+      document.getElementById('sync-text').textContent = 'Sync Error. Check Rules.';
+    });
+  } else {
+    document.getElementById('sync-text').textContent = 'Offline Mode';
+    const saved = localStorage.getItem('riffDeckData');
+    if (saved) {
+      library = JSON.parse(saved);
     }
+    window.renderSidebar();
   }
 
-  function saveTrackToDB(track) {
+  // Database Save/Remove
+  window.saveToDatabase = function(newTrack) {
     if (db) {
-      set(ref(db, 'setlist/' + track.id), track);
+      set(ref(db, 'setlist/' + newTrack.id), newTrack);
     } else {
-      const idx = tracks.findIndex(t => t.id === track.id);
-      if (idx > -1) tracks[idx] = track; else tracks.push(track);
-      localStorage.setItem('riffdeck_tracks', JSON.stringify(tracks));
-      renderSetlist();
-      selectTrack(track.id);
+      const index = library.findIndex(t => t.id === newTrack.id);
+      if (index > -1) library[index] = newTrack;
+      else library.push(newTrack);
+      localStorage.setItem('riffDeckData', JSON.stringify(library));
+      window.renderSidebar();
+      window.loadTrack(newTrack);
     }
-  }
+  };
 
-  function deleteTrackFromDB(id) {
+  window.removeFromDatabase = function(id) {
     if (db) {
       remove(ref(db, 'setlist/' + id));
     } else {
-      tracks = tracks.filter(t => t.id !== id);
-      localStorage.setItem('riffdeck_tracks', JSON.stringify(tracks));
-      if (currentId === id) { currentId = null; renderStage(); }
-      renderSetlist();
+      library = library.filter(t => t.id !== id);
+      localStorage.setItem('riffDeckData', JSON.stringify(library));
+      window.renderSidebar();
     }
-  }
-
-  /* ─── UI Rendering ───────────────────────────────────── */
-  function renderSetlist() {
-    if (tracks.length === 0) {
-      setlist.innerHTML = `<div class="sidebar-empty"><strong>No tracks found.</strong>Click "+ Add Track" to build your setlist.</div>`;
-      return;
-    }
-    setlist.innerHTML = tracks.map((t, i) => `
-      <button class="track-item ${t.id === currentId ? 'active' : ''}" onclick="selectTrack('${t.id}')">
-        <div class="track-num">${String(i + 1).padStart(2, '0')}</div>
-        <div class="track-info">
-          <div class="track-title">${t.title}</div>
-          <div class="track-meta">
-            ${t.key ? `<span class="tag tag-key">${t.key}</span>` : ''}
-            ${t.bpm ? `<span class="tag tag-bpm">${t.bpm}</span>` : ''}
-          </div>
-        </div>
-      </button>
-    `).join('');
-  }
-
-  window.selectTrack = function(id) {
-    if (currentId === id) return;
-    if (isPlaying) stopScroll();
-    if (metronomeTimer) stopMetronome();
-    
-    currentId = id;
-    transpose = 0;
-    localBpmOffset = 0;
-    
-    if (window.innerWidth < 768) {
-      el('sidebar').style.transform = 'translateX(-100%)';
-      el('btnMenu').classList.remove('open');
-    }
-    
-    renderSetlist();
-    renderStage();
   };
 
-  /* ─── Transposer Engine ──────────────────────────────── */
-  const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  function normalizeKey(k) {
-    const map = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
-    return map[k] || k;
-  }
-  function transposeKey(key, n) {
-    const norm = normalizeKey(key);
-    const i = KEYS.indexOf(norm);
-    if (i === -1) return key;
-    return KEYS[(i + n + 120) % 12];
+  /* ════ APP STATE & LOGIC ════ */
+  window.currentTrack = null;
+  let currentTranspose = 0;
+  let isMetroPlaying = false;
+  let metroInterval = null;
+  let isVideoHidden = false;
+  let scrollInterval = null;
+  let scrollSpeed = 1; 
+  let isScrolling = false;
+
+  const setlistEl = document.getElementById('setlist-container');
+  const uiTitle = document.getElementById('ui-title');
+  const uiKey = document.getElementById('ui-key');
+  const uiBpm = document.getElementById('ui-bpm');
+  const uiVideo = document.getElementById('ui-video');
+  const uiTabs = document.getElementById('ui-tabs');
+  const tabPanel = document.getElementById('tab-panel');
+  const metroBtn = document.getElementById('metro-toggle');
+  const visualBeat = document.getElementById('visual-beat');
+
+  /* ════ GLOBAL UI FUNCTIONS (Attached to window so buttons work) ════ */
+  
+  window.toggleMenu = function() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('active');
+  };
+
+  window.renderSidebar = function(filteredLib = library) {
+    setlistEl.innerHTML = '';
+    filteredLib.forEach((track) => {
+      const btn = document.createElement('button');
+      btn.className = 'track-btn';
+      if(window.currentTrack && window.currentTrack.id === track.id) btn.classList.add('active');
+      btn.innerHTML = `<div class="track-title">${track.title}</div><div class="track-artist">${track.artist}</div>`;
+      btn.onclick = () => window.loadTrack(track);
+      setlistEl.appendChild(btn);
+    });
+    
+    if(!window.currentTrack && filteredLib.length > 0) window.loadTrack(filteredLib[0]);
+    else if (library.length === 0) clearUI();
   }
 
-  const CHORD_RE = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add|M)?\d*(?:\/[A-G][#b]?)?)\b/g;
-  function isChordLine(line) {
-    const trimmed = line.trim();
-    if (!trimmed) return false;
-    const noChords = trimmed.replace(CHORD_RE, '');
-    return noChords.replace(/[\s\/\-|]+/g,'').length === 0;
+  window.toggleMiniVideo = function() {
+    const panel = document.getElementById('video-panel');
+    const btn = document.getElementById('mini-btn');
+    const isMini = panel.classList.toggle('mini');
+    btn.textContent = isMini ? 'EXPAND' : 'MINI';
+    if(isMini) {
+        document.getElementById('tab-panel').style.paddingTop = "10px";
+    } else {
+        document.getElementById('tab-panel').style.paddingTop = "2rem";
+    }
   }
   
-  function renderChords(text, transSteps) {
-    if (!text) return '';
-    return text.split('\n').map(line => {
-      const isSec = line.trim().match(/^\[(.*?)\]$/);
-      if (isSec) return `<div class="chord-section">${isSec[1]}</div>`;
-      
-      if (isChordLine(line)) {
-        let out = line.replace(CHORD_RE, match => {
-          let root = match; let bass = ''; let suffix = '';
-          if (match.includes('/')) {
-            const parts = match.split('/');
-            root = parts[0]; bass = '/' + transposeKey(parts[1], transSteps);
+  window.handleSearch = function(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) { window.renderSidebar(library); return; }
+    const filtered = library.filter(t => 
+      t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+    );
+    window.renderSidebar(filtered);
+  }
+
+  window.loadTrack = function(track) {
+    window.currentTrack = track;
+    currentTranspose = 0;
+    window.stopScroll();
+    
+    if (window.innerWidth <= 900) {
+       document.getElementById('sidebar').classList.remove('open');
+       document.getElementById('sidebar-overlay').classList.remove('active');
+    }
+    
+    document.querySelectorAll('.track-btn').forEach(b => b.classList.remove('active'));
+    const btns = setlistEl.children;
+    for(let i=0; i<library.length; i++) {
+      if(library[i].id === track.id && btns[i]) btns[i].classList.add('active');
+    }
+    
+    uiTitle.textContent = `${track.title} - ${track.artist}`;
+    uiBpm.textContent = track.bpm || '--';
+    uiVideo.src = track.youtube_id ? `https://www.youtube.com/embed/${track.youtube_id}` : '';
+    
+    window.renderTabs();
+    if(isMetroPlaying) { window.stopMetronome(); window.startMetronome(); }
+  }
+
+  function clearUI() {
+    window.currentTrack = null;
+    uiTitle.textContent = "Vault is empty";
+    uiBpm.textContent = "--";
+    uiKey.textContent = "--";
+    uiVideo.src = "";
+    uiTabs.innerHTML = "Click '+ Add New Track' to begin.";
+  }
+
+  /* ════ TRANSPOSE LOGIC ════ */
+  const notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+  const noteMap = { 'C':0, 'C#':1, 'DB':1, 'D':2, 'D#':3, 'EB':3, 'E':4, 'F':5, 'F#':6, 'GB':6, 'G':7, 'G#':8, 'AB':8, 'A':9, 'A#':10, 'BB':10, 'B':11 };
+
+  function transposeNote(noteStr, steps) {
+    if (!noteStr) return "";
+    let idx = noteMap[noteStr.toUpperCase()];
+    if (idx === undefined) return noteStr;
+    let newIdx = (idx + steps) % 12;
+    if (newIdx < 0) newIdx += 12;
+    return notes[newIdx];
+  }
+
+  function transposeChord(chord, steps) {
+    if (steps === 0) return chord;
+    const regex = /^([A-G][#b]?)(.*)$/i;
+    const match = chord.match(regex);
+    if (!match) return chord;
+    let root = transposeNote(match[1], steps);
+    let mod = match[2] || "";
+    if (mod.includes('/')) {
+        let parts = mod.split('/');
+        let slashNote = transposeNote(parts[1], steps);
+        mod = parts[0] + '/' + slashNote;
+    }
+    return root + mod;
+  }
+
+  window.renderTabs = function() {
+    if(!window.currentTrack) return;
+    let formattedTabs = window.currentTrack.content
+      .replace(/\[(.*?)\]/g, (match, innerText) => {
+          if (['intro', 'verse', 'chorus', 'pre-chorus', 'solo', 'bridge', 'outro', 'instrumental'].some(s => innerText.toLowerCase().includes(s))) {
+              return `<span class="section-tag">${innerText}</span>`;
+          } else {
+              let tChord = transposeChord(innerText, currentTranspose);
+              return `<span class="chord">${tChord}</span>`;
           }
-          const m2 = root.match(/^([A-G][#b]?)(.*)$/);
-          if (m2) { root = transposeKey(m2[1], transSteps); suffix = m2[2]; }
-          return `<span class="chord">${root}${suffix}${bass}</span>`;
-        });
-        return `<div class="chord-line">${out}</div>`;
-      }
-      return `<div>${line || '<br>'}</div>`;
-    }).join('');
-  }
-
-  function renderStage() {
-    const t = tracks.find(x => x.id === currentId);
-    if (!t) {
-      songTitle.textContent = 'Select a track';
-      songArtist.textContent = '—';
-      songBadges.innerHTML = '';
-      chordContent.innerHTML = '';
-      updateVideo(null);
-      return;
-    }
-    
-    songTitle.textContent = t.title;
-    songArtist.textContent = t.artist || 'Unknown Artist';
-    
-    let effectiveKey = t.key ? transposeKey(t.key, transpose) : '';
-    let effectiveBpm = t.bpm ? parseInt(t.bpm) + localBpmOffset : 0;
-    
-    songBadges.innerHTML = [
-      effectiveKey ? `<span class="badge badge-key">Key of ${effectiveKey}${transpose !== 0 ? ` <small>(${transpose > 0 ? '+' : ''}${transpose})</small>` : ''}</span>` : '',
-      effectiveBpm ? `<span class="badge badge-bpm">${effectiveBpm} BPM</span>` : '',
-      transpose !== 0 ? `<span class="badge badge-capo">Capo ${Math.abs(transpose)} ${transpose > 0 ? '↑' : '↓'}</span>` : ''
-    ].join('');
-    
-    chordContent.innerHTML = renderChords(t.lyrics, transpose);
-    transposeVal.textContent = transpose > 0 ? `+${transpose}` : transpose;
-    bpmVal.textContent = effectiveBpm ? effectiveBpm : '—';
-    
-    updateVideo(t);
-  }
-
-  /* ─── Interactions ───────────────────────────────────── */
-  el('btnTransposeUp').onclick = () => { transpose++; renderStage(); };
-  el('btnTransposeDown').onclick = () => { transpose--; renderStage(); };
-  
-  el('btnBpmUp').onclick = () => { localBpmOffset++; renderStage(); if(metronomeTimer) { stopMetronome(); startMetronome(); } };
-  el('btnBpmDown').onclick = () => { localBpmOffset--; renderStage(); if(metronomeTimer) { stopMetronome(); startMetronome(); } };
-
-  /* Auto-Scroll */
-  function startScroll() {
-    isPlaying = true;
-    btnPlay.classList.add('active');
-    btnPlay.innerHTML = `<span style="font-size:1rem;margin-right:4px">⏸</span> Stop`;
-    scrollTimer = setInterval(() => { window.scrollBy(0, 1); }, 40);
-  }
-  function stopScroll() {
-    isPlaying = false;
-    btnPlay.classList.remove('active');
-    btnPlay.innerHTML = `<span style="font-size:1rem;margin-right:4px">▶</span> Play`;
-    clearInterval(scrollTimer);
-  }
-  btnPlay.onclick = () => isPlaying ? stopScroll() : startScroll();
-
-  /* Metronome */
-  function startMetronome() {
-    const t = tracks.find(x => x.id === currentId);
-    let bpm = (t && t.bpm ? parseInt(t.bpm) : 120) + localBpmOffset;
-    if (bpm <= 0) return;
-    
-    btnMetronome.classList.add('active');
-    metronomeBar.classList.add('active');
-    
-    const beatMs = 60000 / bpm;
-    const doTick = () => {
-      metronomeFill.style.transition = 'none';
-      metronomeFill.style.width = '0%';
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          metronomeFill.style.transition = `width ${beatMs}ms linear`;
-          metronomeFill.style.width = '100%';
-        });
       });
+    uiTabs.innerHTML = formattedTabs;
+
+    let baseKeyMatch = (window.currentTrack.key || "").match(/^([A-G][#b]?)(.*)$/i);
+    if (baseKeyMatch) {
+        let tKey = transposeChord(baseKeyMatch[1], currentTranspose) + baseKeyMatch[2];
+        let tString = currentTranspose === 0 ? "" : currentTranspose > 0 ? ` (+${currentTranspose})` : ` (${currentTranspose})`;
+        uiKey.textContent = tKey + tString;
+    } else {
+        uiKey.textContent = window.currentTrack.key || "--";
+    }
+  }
+
+  document.getElementById('btn-trans-up').addEventListener('click', () => { currentTranspose++; window.renderTabs(); });
+  document.getElementById('btn-trans-down').addEventListener('click', () => { currentTranspose--; window.renderTabs(); });
+
+  /* ════ METRONOME ════ */
+  window.startMetronome = function() {
+    const bpm = window.currentTrack ? window.currentTrack.bpm : 120;
+    if (!bpm || bpm <= 0) return;
+    isMetroPlaying = true;
+    metroBtn.classList.add('active');
+    metroInterval = setInterval(() => {
+      visualBeat.classList.add('tick');
+      setTimeout(() => visualBeat.classList.remove('tick'), 100);
+    }, 60000 / bpm);
+  }
+  window.stopMetronome = function() {
+    isMetroPlaying = false;
+    metroBtn.classList.remove('active');
+    clearInterval(metroInterval);
+  }
+  metroBtn.addEventListener('click', () => { isMetroPlaying ? window.stopMetronome() : window.startMetronome(); });
+
+  /* ════ AUTO SCROLL ════ */
+  window.toggleScroll = function() {
+    const btn = document.getElementById('btn-scroll-play');
+    if(isScrolling) {
+      window.stopScroll();
+    } else {
+      isScrolling = true;
+      btn.textContent = "STOP";
+      scrollInterval = setInterval(() => {
+        tabPanel.scrollTop += scrollSpeed;
+      }, 50);
+    }
+  }
+  window.stopScroll = function() {
+    isScrolling = false;
+    clearInterval(scrollInterval);
+    const btn = document.getElementById('btn-scroll-play');
+    btn.textContent = "PLAY";
+  }
+  window.adjustScroll = function(dir) {
+    scrollSpeed += dir;
+    if(scrollSpeed < 1) scrollSpeed = 1;
+    if(scrollSpeed > 10) scrollSpeed = 10;
+    if(isScrolling) { window.stopScroll(); window.toggleScroll(); }
+  }
+
+  /* ════ THEATER MODE ════ */
+  window.toggleVideo = function() {
+    isVideoHidden = !isVideoHidden;
+    const panel = document.getElementById('video-panel');
+    const btn = document.getElementById('toggle-video-btn');
+    if(isVideoHidden) {
+      panel.classList.add('hidden');
+      btn.classList.add('active');
+      uiVideo.src = ""; 
+    } else {
+      panel.classList.remove('hidden');
+      btn.classList.remove('active');
+      if(window.currentTrack) uiVideo.src = window.currentTrack.youtube_id ? `https://www.youtube.com/embed/${window.currentTrack.youtube_id}` : '';
+    }
+  }
+
+  /* ════ EDITOR MODAL ════ */
+  const modal = document.getElementById('editor-modal');
+  
+  window.openEditor = function(id = null) {
+    document.getElementById('delete-btn').style.display = id ? 'block' : 'none';
+    document.getElementById('modal-title').textContent = id ? 'Edit Track' : 'Add New Track';
+    
+    if (id && window.currentTrack) {
+      document.getElementById('edit-id').value = window.currentTrack.id;
+      document.getElementById('edit-title').value = window.currentTrack.title;
+      document.getElementById('edit-artist').value = window.currentTrack.artist;
+      document.getElementById('edit-key').value = window.currentTrack.key;
+      document.getElementById('edit-bpm').value = window.currentTrack.bpm;
+      document.getElementById('edit-yt').value = window.currentTrack.youtube_id;
+      document.getElementById('edit-content').value = window.currentTrack.content;
+    } else {
+      document.getElementById('edit-id').value = '';
+      document.getElementById('edit-title').value = '';
+      document.getElementById('edit-artist').value = '';
+      document.getElementById('edit-key').value = '';
+      document.getElementById('edit-bpm').value = '';
+      document.getElementById('edit-yt').value = '';
+      document.getElementById('edit-content').value = '';
+    }
+    modal.classList.add('active');
+  }
+
+  window.closeEditor = function() { modal.classList.remove('active'); }
+
+  window.saveSong = function() {
+    const id = document.getElementById('edit-id').value;
+    const newTrack = {
+      id: id ? parseInt(id) : Date.now(),
+      title: document.getElementById('edit-title').value || 'Untitled',
+      artist: document.getElementById('edit-artist').value || 'Unknown',
+      key: document.getElementById('edit-key').value,
+      bpm: parseInt(document.getElementById('edit-bpm').value) || 0,
+      youtube_id: document.getElementById('edit-yt').value,
+      content: document.getElementById('edit-content').value
     };
-    doTick();
-    metronomeTimer = setInterval(doTick, beatMs);
-  }
-  function stopMetronome() {
-    btnMetronome.classList.remove('active');
-    metronomeBar.classList.remove('active');
-    clearInterval(metronomeTimer);
-    metronomeTimer = null;
-  }
-  btnMetronome.onclick = () => metronomeTimer ? stopMetronome() : startMetronome();
-
-  /* Video */
-  function updateVideo(t) {
-    if (!videoOpen) return;
-    if (t && t.videoId) {
-      videoFrame.innerHTML = `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(t.videoId)}?rel=0" allowfullscreen></iframe>`;
-    } else {
-      videoFrame.innerHTML = `<div class="video-placeholder"><span style="font-size:1.5rem;opacity:.3">▶</span><span>No video linked</span></div>`;
-    }
-  }
-  btnVideoToggle.onclick = () => {
-    videoOpen = !videoOpen;
-    if (videoOpen) {
-      videoPanel.classList.add('open');
-      btnVideoToggle.classList.add('active');
-      renderStage();
-    } else {
-      videoPanel.classList.remove('open');
-      btnVideoToggle.classList.remove('active');
-      videoFrame.innerHTML = '';
-    }
-  };
-
-  /* ─── Modal & Form Logic ─────────────────────────────── */
-  const openModal = (id = null) => {
-    modal.style.display = 'flex';
-    requestAnimationFrame(() => modal.classList.add('open'));
     
-    if (id) {
-      const t = tracks.find(x => x.id === id);
-      el('modalTitle').textContent = 'Edit Track';
-      editId.value = t.id;
-      fieldTitle.value = t.title;
-      fieldArtist.value = t.artist || '';
-      fieldKey.value = t.key || '';
-      fieldBpm.value = t.bpm || '';
-      fieldVideoId.value = t.videoId || '';
-      fieldLyrics.value = t.lyrics || '';
-      el('btnDelete').style.display = 'block';
-    } else {
-      el('modalTitle').textContent = 'Add Track';
-      editId.value = '';
-      fieldTitle.value = '';
-      fieldArtist.value = '';
-      fieldKey.value = '';
-      fieldBpm.value = '';
-      fieldVideoId.value = '';
-      fieldLyrics.value = '';
-      el('btnDelete').style.display = 'none';
-    }
-  };
+    window.saveToDatabase(newTrack);
+    window.closeEditor();
+  }
 
-  const closeModal = () => {
-    modal.classList.remove('open');
-    setTimeout(() => modal.style.display = 'none', 300);
-  };
-
-  el('btnAddTrack').onclick = () => openModal();
-  el('btnEditTrack').onclick = () => { if (currentId) openModal(currentId); };
-  el('btnModalClose').onclick = closeModal;
-  el('btnCancel').onclick = closeModal;
-
-  el('btnSave').onclick = () => {
-    if (!fieldTitle.value.trim()) return alert('Title is required.');
-    
-    // Clean YouTube URL if user pasted full link
-    let vidId = fieldVideoId.value.trim();
-    const ytMatch = vidId.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/);
-    if (ytMatch) vidId = ytMatch[1];
-
-    const track = {
-      id: editId.value || 'trk_' + Date.now().toString(36),
-      title: fieldTitle.value.trim(),
-      artist: fieldArtist.value.trim(),
-      key: fieldKey.value.trim(),
-      bpm: fieldBpm.value.trim(),
-      videoId: vidId,
-      lyrics: fieldLyrics.value
-    };
-    
-    saveTrackToDB(track);
-    closeModal();
-  };
-
-  el('btnDelete').onclick = () => {
-    const id = editId.value;
-    if (!id) return;
-    if (!confirm('Delete this track from the setlist?')) return;
-    deleteTrackFromDB(id);
-    closeModal();
-  };
-
-  /* Mobile Menu */
-  el('btnMenu').onclick = function() {
-    this.classList.toggle('open');
-    const sb = el('sidebar');
-    sb.style.transform = this.classList.contains('open') ? 'translateX(0)' : 'translateX(-100%)';
-  };
-
-  /* Init */
-  load();
-
+  window.deleteSong = function() {
+    if(!confirm("Are you sure you want to delete this track?")) return;
+    const id = parseInt(document.getElementById('edit-id').value);
+    window.removeFromDatabase(id);
+    window.currentTrack = null;
+    window.closeEditor();
+  }
 </script>
+
 </body>
 </html>
