@@ -211,65 +211,55 @@
   ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
 
   /* ── IMPROVED MOBILE VIDEO LOGIC ── */
+/* ── MOBILE VIDEO OPTIMIZATION ── */
   @media (max-width: 900px) {
-    .content-area { flex-direction: column; position: relative; }
-    
-    /* The Video Panel now has a "Mini" mode */
     .video-panel { 
-      width: 100%; 
       position: sticky; 
       top: 0; 
       z-index: 15; 
       background: var(--burst-edge); 
       padding: 0.5rem;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s ease;
     }
 
-    /* MINI MODE: Shrinks video to a small floaty window */
+    /* Floating Mini Mode */
     .video-panel.mini {
       width: 160px;
       position: fixed;
       top: auto;
-      bottom: 20px;
-      right: 20px;
+      bottom: 80px; /* Keep it above the nav bar/controls */
+      right: 15px;
       padding: 4px;
       border: 1px solid var(--gold-bright);
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 100;
     }
     
     .video-panel.mini .info-label { display: none; }
     
-    /* Ensure tabs have room when video is sticky at top */
-    .tab-panel { 
-      padding: 1.5rem 1rem; 
-      z-index: 5; /* Keep chords behind the top sticky video */
-    }
-
-    .video-wrapper { 
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-    }
-
-    /* Floating Toggle Button for Mini Mode */
     .mini-toggle {
       display: block;
-      position: absolute;
-      top: 5px;
-      right: 5px;
       background: var(--gold-bright);
       color: #000;
+      border: none;
       border-radius: 4px;
-      padding: 2px 6px;
+      padding: 4px 8px;
       font-size: 10px;
       font-weight: 800;
-      z-index: 20;
+      margin-bottom: 5px;
+      align-self: flex-end;
     }
   }
 
-  /* Fix for "Chord in the back" - ensures they are visible and layered correctly */
+  @media (min-width: 901px) {
+    .mini-toggle { display: none; }
+  }
+
+  /* Layer Fix: Chords stay clear */
   .chord {
     position: relative;
-    z-index: 2;
+    z-index: 1;
   }
 </style>
 </head>
@@ -513,12 +503,21 @@
   }
 
   /* Mini Video Toggle */
-  window.toggleMiniVideo = function() {
+ window.toggleMiniVideo = function() {
   const panel = document.getElementById('video-panel');
   const btn = document.getElementById('mini-btn');
   const isMini = panel.classList.toggle('mini');
-  btn.textContent = isMini ? 'EXPAND' : 'MINI MODE';
-};
+  
+  btn.textContent = isMini ? 'EXPAND' : 'MINI';
+  
+  // If we go mini, we want to make sure the tab panel scrolls to the top 
+  // so the user doesn't lose their place
+  if(isMini) {
+      document.getElementById('tab-panel').style.paddingTop = "10px";
+  } else {
+      document.getElementById('tab-panel').style.paddingTop = "2rem";
+  }
+}
   
   /* Search Functionality */
   window.handleSearch = function(query) {
