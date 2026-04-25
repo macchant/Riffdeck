@@ -512,6 +512,14 @@
     else if (library.length === 0) clearUI();
   }
 
+  /* Mini Video Toggle */
+  window.toggleMiniVideo = function() {
+  const panel = document.getElementById('video-panel');
+  const btn = document.getElementById('mini-btn');
+  const isMini = panel.classList.toggle('mini');
+  btn.textContent = isMini ? 'EXPAND' : 'MINI MODE';
+};
+  
   /* Search Functionality */
   window.handleSearch = function(query) {
     const q = query.toLowerCase().trim();
