@@ -1,398 +1,997 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RiffDeck | Online Setlist Sync</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0f0a07" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>RiffDeck — Online Setlist Sync</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  /* ── LES PAUL DARKBURST THEME ── */
+  /* ─── Gibson Darkburst Design Tokens ────────────────── */
+  /*
+    Inspired by the Gibson Les Paul Darkburst finish:
+    deep espresso core → mahogany burst → honey amber edge
+    Warm, organic, zero blue. Like looking into a sunburst under stage light.
+  */
   :root {
-    --burst-center: #8c3b0c;
-    --burst-mid: #4a1501;
-    --burst-edge: #0a0301;
-    
-    --panel-bg: rgba(20, 8, 4, 0.75);
-    --panel-border: rgba(212, 175, 55, 0.2);
-    
-    --gold-bright: #d4af37;
-    --gold-dim: #997a00;
-    --cream: #fbf5e9;
-    --cream-dim: #c2baaa;
-    
-    --fretboard: #1a1a1a;
-  }
-  
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { 
-    background: radial-gradient(circle at 50% 30%, var(--burst-center) 0%, var(--burst-mid) 45%, var(--burst-edge) 100%);
-    background-attachment: fixed;
-    color: var(--cream); font-family: 'Inter', sans-serif; 
-    height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-  }
-  button { font-family: inherit; cursor: pointer; border: none; outline: none; }
-  
-  /* ── HEADER ── */
-  header {
-    background: var(--panel-bg); border-bottom: 1px solid var(--panel-border);
-    padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 20; backdrop-filter: blur(10px);
-  }
-  .brand-wrap { display: flex; align-items: center; gap: 1rem; }
-  .menu-toggle { display: none; } /* Hidden on desktop */
-  
-  .brand { 
-    font-size: 1.6rem; font-family: 'Playfair Display', serif; font-weight: 800; 
-    letter-spacing: 0.05em; display: flex; align-items: center; color: var(--gold-bright);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  }
-  
-  .search-container { position: relative; width: 400px; max-width: 100%; }
-  .search-input {
-    width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid var(--panel-border); border-radius: 4px;
-    font-size: 0.875rem; background: rgba(0,0,0,0.4); color: var(--cream);
-    transition: all 0.2s; outline: none;
-  }
-  .search-input:focus { border-color: var(--gold-bright); box-shadow: 0 0 8px rgba(212, 175, 55, 0.3); }
-  .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--cream-dim); }
+    /* ── Dark core (deep espresso / ebony) */
+    --ink:      #0f0a07;   /* near-black with warm brown undertone */
+    --ink-2:    #160e09;   /* body of sidebar, slightly lifted */
+    --ink-3:    #1f1510;   /* card surfaces, inputs */
+    --ink-4:    #2e1f15;   /* borders, dividers */
 
-  /* ── LAYOUT ── */
-  .container { display: flex; flex: 1; overflow: hidden; position: relative; }
+    /* ── Mahogany mid-tones */
+    --muted:    #4a2e1e;   /* muted borders on hover */
+    --subtle:   #7a5038;   /* subdued labels, track numbers */
+    --dim:      #a87050;   /* dimmed text, placeholder */
 
-  /* ── SIDEBAR ── */
-  .sidebar-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 25;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(3px);
-  }
-  .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+    /* ── Warm text */
+    --text:     #d4b090;   /* body text — warm parchment */
+    --bright:   #e8ccaa;   /* brighter text */
+    --white:    #f5e6cc;   /* "white" — aged cream / ivory */
 
-  .sidebar { 
-    width: 320px; background: var(--panel-bg); border-right: 1px solid var(--panel-border); 
-    display: flex; flex-direction: column; z-index: 30; backdrop-filter: blur(10px);
-  }
-  
-  .setlist { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
-  .track-btn { 
-    background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 1rem; 
-    text-align: left; color: var(--cream-dim); transition: all 0.2s; position: relative;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .track-btn:hover { background: rgba(212, 175, 55, 0.05); color: var(--cream); }
-  .track-btn.active { 
-    background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), transparent); 
-    border-left: 3px solid var(--gold-bright); color: var(--gold-bright); border-bottom-color: transparent;
-  }
-  .track-title { font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; font-family: 'Playfair Display', serif; }
-  .track-artist { font-size: 0.8rem; opacity: 0.8; font-family: 'Inter', sans-serif; }
-  
-  .sidebar-actions { padding: 1rem; border-top: 1px solid var(--panel-border); display: flex; flex-direction: column; gap: 0.5rem; background: var(--burst-edge); }
-  .btn-primary { 
-    background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim)); color: #111; 
-    padding: 0.8rem; border-radius: 4px; font-weight: 800; text-transform: uppercase; 
-    letter-spacing: 0.05em; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  }
-  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    /* ── Accent: honey amber (the burst edge glow) */
+    --gold:     #e8a030;   /* primary accent — honey amber */
+    --gold-dim: #c07818;   /* dimmed amber */
 
-  /* ── MAIN STAGE ── */
-  .main-stage { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-  
-  /* Header Info */
-  .track-header { 
-    padding: 1rem 2rem; border-bottom: 1px solid var(--panel-border); display: flex; 
-    justify-content: space-between; align-items: center; background: var(--panel-bg); 
-    flex-wrap: wrap; gap: 1rem; backdrop-filter: blur(10px);
-  }
-  .info-group { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-  .info-stat { display: flex; flex-direction: column; }
-  .info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold-dim); margin-bottom: 2px; font-weight: 600;}
-  .info-val { font-size: 1.1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--cream); }
-  
-  /* Controls */
-  .control-wrap { display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
-  .trans-btn, .scroll-btn { background: transparent; color: var(--gold-bright); padding: 0.3rem 0.8rem; font-weight: 800; transition: 0.2s; }
-  .trans-btn:hover, .scroll-btn:hover { background: rgba(212, 175, 55, 0.2); }
-  .val-display { padding: 0 0.8rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; border-left: 1px solid var(--panel-border); border-right: 1px solid var(--panel-border); min-width: 40px; text-align: center; display: flex; align-items: center; justify-content: center; color: var(--cream); background: transparent; }
-  
-  .toolbar { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-  .tool-btn { 
-    background: transparent; color: var(--cream); padding: 0.5rem 1rem; 
-    border-radius: 4px; font-weight: 600; font-size: 0.8rem; transition: 0.2s; 
-    border: 1px solid var(--panel-border); display: flex; align-items: center; gap: 0.5rem; 
-  }
-  .tool-btn:hover { background: rgba(255,255,255,0.1); }
-  .tool-btn.active { background: var(--gold-dim); color: #111; border-color: var(--gold-bright); }
-  .visual-beat { width: 12px; height: 12px; border-radius: 50%; background: #333; transition: 0.1s; border: 1px solid var(--gold-dim); }
-  .visual-beat.tick { background: var(--gold-bright); transform: scale(1.5); box-shadow: 0 0 10px var(--gold-bright); }
+    /* ── Secondary accent: vintage tortoiseshell orange */
+    --amber:    #d45c10;   /* warm sienna — used for active states */
 
-  /* Content Area */
-  .content-area { flex: 1; display: flex; overflow: hidden; transition: 0.3s; }
-  .video-panel { width: 40%; border-right: 1px solid var(--panel-border); padding: 1.5rem; display: flex; flex-direction: column; background: rgba(0,0,0,0.3); transition: 0.3s; }
-  .video-panel.hidden { width: 0; padding: 0; border: none; overflow: hidden; opacity: 0; flex: 0; }
-  .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden; border: 1px solid var(--gold-dim); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-  iframe { width: 100%; height: 100%; border: none; }
-  
-  /* Tab Sheet */
-  .tab-panel { flex: 1; padding: 2rem 5%; overflow-y: auto; background: transparent; scroll-behavior: smooth; }
-  pre { font-family: 'JetBrains Mono', monospace; font-size: 1rem; line-height: 1.8; color: var(--cream); white-space: pre-wrap; padding-bottom: 50vh; }
-  
-  .chord { 
-    color: var(--burst-edge); font-weight: 700; background: var(--gold-bright); 
-    padding: 0px 4px; border-radius: 2px; font-size: 0.9em;
-    display: inline-block; transform: translateY(-2px);
-    box-shadow: 1px 1px 0px rgba(0,0,0,0.5);
-  }
-  .section-tag { 
-    color: var(--gold-bright); font-weight: 800; font-family: 'Playfair Display', serif;
-    font-size: 1.1rem; display: inline-block; margin-top: 1.5rem; margin-bottom: 0.2rem; 
-    border-bottom: 1px solid var(--panel-border); width: 100%;
+    /* ── Signal colors — kept warm */
+    --teal:     #b87c20;   /* replaced cool teal → aged brass */
+    --red:      #c0402a;   /* warm deep red, like a stop light on mahogany */
+
+    /* ── Grain highlight (light catch on wood) */
+    --grain:    rgba(232, 180, 80, 0.06);
+
+    --r:        8px;
+    --r-lg:     16px;
+    --r-xl:     24px;
+    --nav-h:    56px;
+    --sidebar-w:260px;
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+    --font-ui:   'Syne', sans-serif;
   }
 
-  /* Connecting Status */
-  .sync-status { padding: 0.5rem 1rem; text-align: center; font-size: 0.75rem; color: var(--gold-dim); background: var(--burst-edge); font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4444; }
-  .sync-dot.online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+  /* ─── Reset ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--font-ui);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+  input, textarea, select {
+    font: inherit; color: inherit;
+    background: var(--ink-3);
+    border: 1.5px solid var(--muted);
+    border-radius: var(--r);
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--gold); }
 
-  /* ── EDITOR MODAL ── */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; }
-  .modal-overlay.active { opacity: 1; pointer-events: auto; }
-  .modal-box { background: var(--fretboard); border: 1px solid var(--gold-dim); border-radius: 8px; width: 90%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: translateY(20px); transition: 0.3s; }
-  .modal-overlay.active .modal-box { transform: translateY(0); }
-  .modal-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; color: var(--gold-bright); font-family: 'Playfair Display', serif; }
-  .modal-body { padding: 1.5rem; overflow-y: auto; display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
-  .full-width { grid-column: span 2; }
-  .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
-  .input-group label { font-size: 0.8rem; color: var(--cream-dim); font-weight: 600; }
-  .input-group input, .input-group textarea { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 4px; color: var(--cream); font-family: 'Inter', sans-serif; outline: none; }
-  .input-group input:focus, .input-group textarea:focus { border-color: var(--gold-bright); }
-  .input-group textarea { height: 250px; font-family: 'JetBrains Mono', monospace; resize: vertical; }
-  .modal-footer { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end; gap: 1rem; flex-wrap: wrap; }
-  
-  .delete-btn { background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444; margin-right: auto; padding: 0.8rem 1.5rem; border-radius: 4px; font-weight: 600; }
-  .delete-btn:hover { background: #ff4444; color: #fff; }
-
-  /* ════ MOBILE RESPONSIVE QUERIES ════ */
-  @media (max-width: 900px) {
-    header { padding: 1rem; flex-wrap: wrap; gap: 1rem; }
-    .menu-toggle { 
-      display: block; background: transparent; color: var(--gold-bright); 
-      font-size: 1.8rem; cursor: pointer; padding: 0; line-height: 1;
-    }
-    .search-container { width: 100%; order: 3; }
-    
-    .sidebar {
-      position: absolute; top: 0; left: -100%; height: 100%; 
-      width: 85%; max-width: 350px; transition: left 0.3s ease;
-    }
-    .sidebar.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
-    
-    .track-header { padding: 1rem; flex-direction: column; align-items: flex-start; }
-    .info-group { width: 100%; gap: 1rem; }
-    .info-stat { min-width: 45%; }
-    
-    .toolbar { width: 100%; justify-content: space-between; margin-top: 0.5rem; }
-    
-    .content-area { flex-direction: column; }
-    .video-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--panel-border); padding: 1rem; }
-    .video-panel.hidden { display: none; }
-    
-    .tab-panel { padding: 1rem; }
-    pre { font-size: 0.9rem; }
-    
-    .modal-body { grid-template-columns: 1fr; }
-    .full-width { grid-column: span 1; }
-    .modal-footer { flex-direction: column; align-items: stretch; }
-    .delete-btn { margin-right: 0; text-align: center; }
+  /* ─── Darkburst wood-grain atmosphere ───────────────── */
+  /* Subtle radial warmth from center — like light hitting a burst finish */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 120% 80% at 60% 40%,
+      rgba(180, 90, 10, 0.07) 0%,
+      rgba(120, 50, 5, 0.04) 40%,
+      transparent 70%
+    );
+  }
+  /* Fine noise grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+    opacity: .04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
   }
 
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+  /* ─── Topnav ─────────────────────────────────────────── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--nav-h);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(15,10,7,.92);
+    backdrop-filter: blur(24px) saturate(1.6);
+    border-bottom: 1px solid var(--ink-4);
+    /* subtle amber glow along bottom edge — like light bleeding under a guitar body */
+    box-shadow: 0 1px 0 rgba(232,160,48,.12), 0 4px 24px rgba(0,0,0,.4);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    color: var(--white);
+    letter-spacing: -.01em;
+  }
+  .nav-logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem;
+    box-shadow: 0 2px 8px rgba(232,160,48,.3);
+  }
+  .nav-logo span { color: var(--gold); font-style: italic; }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .nav-status {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: .65rem;
+    color: var(--dim);
+    background: var(--ink-3);
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--ink-4);
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.offline { background: var(--red); animation: none; }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: .4; }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .btn-menu {
+    width: 44px; height: 44px;
+    border-radius: var(--r);
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 5px;
+    transition: background .2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .btn-menu span {
+    display: block; width: 18px; height: 1.5px;
+    background: var(--dim);
+    border-radius: 2px;
+    transition: transform .25s, opacity .25s;
+  }
+  .btn-menu.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .btn-menu.open span:nth-child(2) { opacity: 0; }
+  .btn-menu.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
-  /* ── IMPROVED MOBILE VIDEO LOGIC ── */
-/* ── MOBILE VIDEO OPTIMIZATION ── */
-  @media (max-width: 900px) {
-    .video-panel { 
-      position: sticky; 
-      top: 0; 
-      z-index: 15; 
-      background: var(--burst-edge); 
-      padding: 0.5rem;
-      transition: all 0.3s ease;
-    }
-
-    /* Floating Mini Mode */
-    .video-panel.mini {
-      width: 160px;
-      position: fixed;
-      top: auto;
-      bottom: 80px; /* Keep it above the nav bar/controls */
-      right: 15px;
-      padding: 4px;
-      border: 1px solid var(--gold-bright);
-      border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      z-index: 100;
-    }
-    
-    .video-panel.mini .info-label { display: none; }
-    
-    .mini-toggle {
-      display: block;
-      background: var(--gold-bright);
-      color: #000;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 10px;
-      font-weight: 800;
-      margin-bottom: 5px;
-      align-self: flex-end;
-    }
+  /* ─── Layout ─────────────────────────────────────────── */
+  .layout {
+    display: flex;
+    padding-top: var(--nav-h);
+    min-height: 100dvh;
   }
 
-  @media (min-width: 901px) {
-    .mini-toggle { display: none; }
+  /* ─── Sidebar (Setlist) ──────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    position: fixed;
+    top: var(--nav-h); bottom: 0; left: 0;
+    overflow-y: auto;
+    background: linear-gradient(180deg, var(--ink-2) 0%, #120c08 100%);
+    border-right: 1px solid var(--ink-4);
+    /* warm amber seam on right edge — like binding on a guitar body */
+    box-shadow: inset -1px 0 0 rgba(232,160,48,.08);
+    display: flex; flex-direction: column;
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    z-index: 90;
   }
-
-  /* Layer Fix: Chords stay clear */
-  .chord {
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 2px; }
+  .sidebar-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--ink-4);
+  }
+  .sidebar-label {
+    font-size: .6rem; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--subtle);
+    margin-bottom: 10px;
+  }
+  .btn-add {
+    width: 100%;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, var(--gold) 0%, #c07010 100%);
+    color: #1a0e06;
+    border-radius: var(--r);
+    font-size: .8rem; font-weight: 700;
+    letter-spacing: .04em;
+    transition: filter .2s, transform .1s;
+    box-shadow: 0 2px 12px rgba(200,120,10,.25);
+  }
+  .btn-add:hover { filter: brightness(1.1); }
+  .btn-add:active { transform: scale(.97); }
+  .btn-add svg { flex-shrink: 0; }
+  .setlist { padding: 8px; flex: 1; }
+  .track-item {
+    display: flex; align-items: center; gap: 0;
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 4px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: background .15s, border-color .15s;
+    cursor: pointer;
     position: relative;
-    z-index: 1;
   }
+  .track-item:hover { background: var(--ink-3); border-color: var(--ink-4); }
+  .track-item.active {
+    background: var(--ink-3);
+    border-color: var(--gold);
+  }
+  .track-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--gold);
+    border-radius: 2px 0 0 2px;
+  }
+  .track-num {
+    width: 32px; flex-shrink: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: .6rem;
+    color: var(--subtle);
+    padding: 12px 0;
+  }
+  .track-info { flex: 1; padding: 10px 8px 10px 0; min-width: 0; }
+  .track-title {
+    font-size: .82rem; font-weight: 600;
+    color: var(--bright);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  .track-item.active .track-title { color: var(--white); }
+  .track-meta {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 3px;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: .58rem; font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--ink-4);
+    color: var(--dim);
+    letter-spacing: .02em;
+  }
+  .tag-key { background: rgba(232,196,106,.12); color: var(--gold); }
+  .tag-bpm { background: rgba(78,205,196,.1); color: var(--teal); }
+  .sidebar-empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--subtle);
+    font-size: .78rem;
+    line-height: 1.7;
+  }
+  .sidebar-empty strong { display: block; color: var(--dim); margin-bottom: 4px; font-size: .9rem; }
+
+  /* ─── Main Stage ─────────────────────────────────────── */
+  .main {
+    flex: 1;
+    margin-left: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - var(--nav-h));
+    overflow: hidden;
+  }
+
+  /* ─── Controls Bar ───────────────────────────────────── */
+  .controls-bar {
+    background: linear-gradient(180deg, var(--ink-2) 0%, #180f0a 100%);
+    border-bottom: 1px solid var(--ink-4);
+    box-shadow: 0 1px 0 rgba(232,160,48,.06);
+    padding: 10px 20px;
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+    position: sticky; top: var(--nav-h); z-index: 80;
+  }
+  .ctrl-group {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ctrl-label {
+    font-size: .6rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .ctrl-value {
+    font-family: var(--font-mono);
+    font-size: .9rem; font-weight: 500;
+    color: var(--white);
+    min-width: 36px; text-align: center;
+  }
+  .ctrl-btn {
+    width: 44px; height: 44px;
+    border-radius: 6px;
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    color: var(--dim);
+    font-size: 1rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s, border-color .15s, transform .1s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ctrl-btn:hover { background: var(--ink-4); color: var(--bright); border-color: var(--muted); }
+  .ctrl-btn:active { transform: scale(.92); }
+  .ctrl-divider {
+    width: 1px; height: 24px;
+    background: var(--ink-4);
+    flex-shrink: 0;
+  }
+  .btn-play {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 16px;
+    height: 44px;
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    border-radius: var(--r);
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: var(--dim);
+    transition: all .2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+  }
+  .btn-play.active { background: var(--teal); border-color: var(--teal); color: var(--ink-2); }
+  .btn-play:hover:not(.active) { border-color: var(--teal); color: var(--teal); }
+  .btn-icon-sm {
+    display: flex; align-items: center; gap: 5px;
+    padding: 0 12px;
+    height: 44px;
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    border-radius: var(--r);
+    font-size: .7rem; font-weight: 600;
+    color: var(--dim);
+    transition: all .2s;
+    letter-spacing: .03em;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+  }
+  .btn-icon-sm:hover { border-color: var(--muted); color: var(--bright); }
+  .btn-icon-sm.active { border-color: var(--amber); color: var(--amber); background: rgba(240,160,80,.08); }
+  .controls-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  /* ─── Song Stage ─────────────────────────────────────── */
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .song-header {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--ink-4);
+    background: linear-gradient(135deg, rgba(46,31,21,.5) 0%, transparent 55%);
+    position: relative;
+  }
+  .song-artist {
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .song-title {
+    font-family: var(--font-serif);
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    color: var(--white);
+    line-height: 1.1;
+    font-style: italic;
+  }
+  .song-badges {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .badge {
+    font-family: var(--font-mono);
+    font-size: .65rem; font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 100px;
+    letter-spacing: .04em;
+  }
+  /* Warm amber tones for badges */
+  .badge-key { background: rgba(232,160,48,.15); color: var(--gold); border: 1px solid rgba(232,160,48,.3); }
+  .badge-bpm { background: rgba(180,120,32,.15); color: var(--teal); border: 1px solid rgba(180,120,32,.3); }
+  .badge-capo { background: rgba(212,92,16,.12); color: var(--amber); border: 1px solid rgba(212,92,16,.25); }
+
+  /* Chord sheet */
+  .chord-sheet {
+    padding: 24px 28px 80px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    position: relative;
+  }
+  .chord-sheet::-webkit-scrollbar { width: 4px; }
+  .chord-sheet::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+  .chord-content {
+    font-family: var(--font-mono);
+    font-size: clamp(.875rem, 2vw, .9rem);
+    line-height: 2.1;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    counter-reset: section;
+  }
+
+  /* Chord highlighting */
+  .chord { color: var(--gold); font-weight: 500; }
+  .section-label {
+    display: inline-block;
+    font-size: .6rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--dim);
+    background: var(--ink-3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    border-left: 2px solid var(--gold);
+  }
+
+  /* Empty state */
+  .empty-state {
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    min-height: 400px;
+    text-align: center;
+    padding: 40px;
+  }
+  .empty-icon {
+    width: 72px; height: 72px;
+    border-radius: 20px;
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+  .empty-title {
+    font-family: var(--font-serif);
+    font-size: 1.5rem; font-style: italic;
+    color: var(--dim);
+  }
+  .empty-sub {
+    font-size: .78rem;
+    color: var(--subtle);
+    max-width: 280px; line-height: 1.7;
+  }
+
+  /* ─── Video Panel ────────────────────────────────────── */
+  .video-panel {
+    border-top: 1px solid var(--ink-4);
+    background: var(--ink);
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1);
+  }
+  .video-panel.open { max-height: 400px; }
+  .video-inner {
+    padding: 16px 20px;
+  }
+  .video-frame {
+    width: 100%; aspect-ratio: 16/9;
+    border-radius: var(--r-lg);
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    overflow: hidden;
+  }
+  .video-frame iframe { width: 100%; height: 100%; border: none; display: block; }
+  .video-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px;
+    color: var(--subtle);
+    font-size: .78rem;
+  }
+
+  /* ─── Metronome ──────────────────────────────────────── */
+  .metronome-bar {
+    position: fixed;
+    bottom: 0;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: var(--sidebar-w); right: 0;
+    height: 4px;
+    background: var(--ink-3);
+    z-index: 80;
+    overflow: hidden;
+    display: none;
+  }
+  .metronome-bar.active { display: block; }
+  .metronome-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--gold));
+    width: 0%;
+    transition: width linear;
+  }
+
+  /* ─── Modal ──────────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(5,5,8,.85);
+    backdrop-filter: blur(8px);
+    display: none; align-items: flex-end; justify-content: center;
+    padding: 0;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--ink-2);
+    border: 1px solid var(--ink-4);
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    width: 100%; max-width: 100%;
+    max-height: 96dvh;
+    overflow-y: auto;
+    animation: modalIn .3s cubic-bezier(.34,1.2,.64,1);
+    box-shadow: 0 -20px 60px rgba(0,0,0,.6);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: none; }
+  }
+  /* drag handle */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--muted);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+  .modal::-webkit-scrollbar { width: 4px; }
+  .modal::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 2px; }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--ink-4);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title {
+    font-family: var(--font-serif);
+    font-size: 1.2rem; font-style: italic;
+    color: var(--white);
+  }
+  .modal-close {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background: var(--ink-3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--dim); font-size: 1rem;
+    transition: background .15s, color .15s;
+    touch-action: manipulation;
+  }
+  .modal-close:hover { background: var(--red); color: white; }
+  .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field label {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .field input, .field select, .field textarea {
+    padding: 12px 14px;
+    border-radius: var(--r);
+    font-size: 1rem; /* 16px prevents iOS zoom on focus */
+    background: var(--ink-3);
+  }
+  .field textarea { resize: vertical; min-height: 180px; line-height: 1.8; font-family: var(--font-mono); font-size: 0.875rem; }
+  .field-hint { font-size: .68rem; color: var(--subtle); margin-top: 2px; }
+  .modal-footer {
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--ink-4);
+    display: flex; gap: 10px; justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .btn-danger {
+    margin-right: auto;
+    padding: 0 16px;
+    height: 48px;
+    border-radius: var(--r);
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--red);
+    background: rgba(224,90,90,.08);
+    border: 1px solid rgba(224,90,90,.2);
+    transition: all .2s;
+    touch-action: manipulation;
+  }
+  .btn-danger:hover { background: rgba(224,90,90,.15); border-color: var(--red); }
+  .btn-secondary {
+    padding: 0 16px;
+    height: 48px;
+    border-radius: var(--r);
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--dim);
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    transition: all .2s;
+    touch-action: manipulation;
+  }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--bright); }
+  .btn-primary {
+    padding: 0 20px;
+    height: 48px;
+    border-radius: var(--r);
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--ink);
+    background: var(--gold);
+    transition: background .2s, transform .1s;
+    touch-action: manipulation;
+  }
+  .btn-primary:hover { background: #f0cf7a; }
+  .btn-primary:active { transform: scale(.97); }
+
+  /* ─── Mobile overlay ─────────────────────────────────── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 85;
+    background: rgba(5,5,8,.6);
+    backdrop-filter: blur(4px);
+  }
+  .sidebar-overlay.open { display: block; animation: fadeIn .2s; }
+
+  /* ─── Responsive ─────────────────────────────────────── */
+  @media (max-width: 768px) {
+    :root { --sidebar-w: 300px; }
+
+    .btn-menu { display: flex; }
+
+    .sidebar {
+      transform: translateX(-100%);
+      box-shadow: 20px 0 60px rgba(0,0,0,.5);
+      /* full height under nav */
+      top: var(--nav-h); bottom: 0;
+    }
+    .sidebar.open { transform: none; }
+
+    .main { margin-left: 0; }
+
+    .controls-bar {
+      padding: 6px 10px;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .controls-bar::-webkit-scrollbar { display: none; }
+    /* Show labels only for transpose & BPM groups on mobile */
+    .ctrl-label { display: none; }
+    .controls-right { margin-left: 0; flex-shrink: 0; }
+    .ctrl-divider { flex-shrink: 0; }
+
+    .song-header { padding: 16px 16px 12px; }
+
+    .chord-sheet {
+      padding: 16px 16px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .metronome-bar { left: 0; }
+
+    .field-row { grid-template-columns: 1fr; }
+
+    /* Full-width buttons in modal footer on mobile */
+    .modal-footer {
+      flex-direction: column;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      gap: 8px;
+    }
+    .btn-danger { margin-right: 0; width: 100%; justify-content: center; order: 3; }
+    .btn-secondary { width: 100%; justify-content: center; order: 2; }
+    .btn-primary { width: 100%; justify-content: center; order: 1; }
+
+    .modal-body { padding: 14px 16px; }
+    .modal-header { padding: 16px 16px 12px; }
+
+    /* Video panel smaller on mobile */
+    .video-panel.open { max-height: 240px; }
+    .video-inner { padding: 10px 12px; }
+
+    /* Toast bottom safe area */
+    .toast-area {
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      right: 12px; left: 12px;
+      align-items: stretch;
+    }
+    .toast { text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    .nav { padding: 0 12px; }
+    .nav-logo { font-size: 1.1rem; }
+    .nav-status span { display: none; }
+    .song-title { font-size: clamp(1.3rem, 6vw, 1.8rem); }
+  }
+
+  /* Very small screens (SE, Galaxy A-series narrow) */
+  @media (max-width: 360px) {
+    .ctrl-value { min-width: 28px; font-size: .8rem; }
+    .btn-play, .btn-icon-sm { padding: 0 8px; font-size: .65rem; }
+  }
+
+  /* Desktop modal - centered card */
+  @media (min-width: 769px) {
+    .modal-backdrop { align-items: center; padding: 20px; }
+    .modal {
+      border-radius: var(--r-xl);
+      max-width: 520px;
+    }
+    .modal::before { display: none; }
+    .modal-footer { flex-direction: row; }
+    .btn-danger { margin-right: auto; width: auto; order: 0; }
+    .btn-secondary { width: auto; order: 0; }
+    .btn-primary { width: auto; order: 0; }
+  }
+
+  /* ─── Autoscroll ─────────────────────────────────────── */
+  .chord-sheet.autoscrolling { scroll-behavior: smooth; }
+
+  /* ─── Toast ──────────────────────────────────────────── */
+  .toast-area { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--ink-3);
+    border: 1px solid var(--ink-4);
+    border-radius: var(--r);
+    padding: 12px 16px;
+    font-size: .78rem; color: var(--bright);
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    animation: toastIn .25s, toastOut .25s 2.75s forwards;
+    max-width: 260px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(-4px); } }
+
+  /* ─── MINI mode ──────────────────────────────────────── */
+  .mini-badge {
+    position: absolute; top: 12px; right: 16px;
+    font-family: var(--font-mono);
+    font-size: .55rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(232,196,106,.12);
+    color: var(--gold-dim);
+    border: 1px solid rgba(232,196,106,.2);
+  }
+  .stage.mini-mode .chord-content { font-size: clamp(.75rem, 1.5vw, .78rem); line-height: 1.8; }
+  .stage.mini-mode .song-title { font-size: clamp(1rem, 2.5vw, 1.4rem); }
 </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand-wrap">
-      <button id="menu-toggle" class="menu-toggle" onclick="toggleMenu()">☰</button>
-      <div class="brand">RiffDeck</div>
+<!-- ─── Nav ──────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">♩</div>
+    Riff<span>Deck</span>
+  </div>
+  <div class="nav-right">
+    <div class="nav-status" id="statusBadge">
+      <div class="status-dot offline" id="statusDot"></div>
+      <span id="statusText">Offline</span>
     </div>
-    <div class="search-container">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search setlist..." oninput="handleSearch(this.value)">
+    <button class="btn-menu" id="btnMenu" aria-label="Toggle setlist">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ─── Sidebar overlay ───────────────────────────────── -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ─── Layout ───────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-label">Setlist</div>
+      <button class="btn-add" id="btnAddTrack">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Add Track
+      </button>
     </div>
-  </header>
-
-  <div class="container">
-    
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMenu()"></div>
-
-    <aside class="sidebar" id="sidebar">
-      <div class="sync-status" id="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">Connecting...</span></div>
-      <div class="setlist" id="setlist-container"></div>
-      <div class="sidebar-actions">
-        <button class="btn-primary" onclick="openEditor()">+ Add New Track</button>
+    <div class="setlist" id="setlist">
+      <div class="sidebar-empty">
+        <strong>No tracks yet</strong>
+        Add your first track to build your setlist.
       </div>
-    </aside>
+    </div>
+  </aside>
 
-    <main class="main-stage">
-      <div class="track-header">
-        <div class="info-group">
-          <div class="info-stat" style="flex: 1; min-width: 100%;">
-            <span class="info-label">Title</span>
-            <span class="info-val" id="ui-title">Welcome to RiffDeck</span>
-          </div>
-          
-          <div class="info-stat">
-            <span class="info-label">Transpose</span>
-            <div class="control-wrap">
-              <button class="trans-btn" id="btn-trans-down">-</button>
-              <span class="val-display" id="ui-key">--</span>
-              <button class="trans-btn" id="btn-trans-up">+</button>
-            </div>
-          </div>
+  <!-- Main -->
+  <main class="main">
 
-          <div class="info-stat">
-            <span class="info-label">BPM</span>
-            <span class="info-val" id="ui-bpm" style="margin-top: 4px;">--</span>
-          </div>
-          
-          <div class="info-stat">
-            <span class="info-label">Auto-Scroll</span>
-            <div class="control-wrap">
-              <button class="scroll-btn" onclick="adjustScroll(-1)">-</button>
-              <button class="val-display" id="btn-scroll-play" onclick="toggleScroll()" style="width:60px; color:var(--gold-bright); cursor:pointer">PLAY</button>
-              <button class="scroll-btn" onclick="adjustScroll(1)">+</button>
+    <!-- Controls bar -->
+    <div class="controls-bar">
+      <!-- Transpose -->
+      <div class="ctrl-group">
+        <span class="ctrl-label">Transpose</span>
+        <button class="ctrl-btn" id="btnTransposeDown" title="Transpose Down">−</button>
+        <span class="ctrl-value" id="transposeVal">0</span>
+        <button class="ctrl-btn" id="btnTransposeUp" title="Transpose Up">+</button>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <!-- BPM + Scroll -->
+      <div class="ctrl-group">
+        <span class="ctrl-label">BPM</span>
+        <button class="ctrl-btn" id="btnBpmDown" title="Slower">−</button>
+        <span class="ctrl-value" id="bpmVal">—</span>
+        <button class="ctrl-btn" id="btnBpmUp" title="Faster">+</button>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <!-- Autoscroll -->
+      <button class="btn-play" id="btnScroll">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M2 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Scroll
+      </button>
+
+      <!-- Metronome -->
+      <button class="btn-icon-sm" id="btnMetronome">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 19 22 19"/><line x1="12" y1="19" x2="12" y2="11"/></svg>
+        Click
+      </button>
+
+      <!-- Video toggle -->
+      <button class="btn-icon-sm" id="btnVideo">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Video
+      </button>
+
+      <div class="controls-right">
+        <!-- Mini mode -->
+        <button class="btn-icon-sm" id="btnMini" title="Mini mode">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          Mini
+        </button>
+        <!-- Edit -->
+        <button class="btn-icon-sm" id="btnEdit">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage -->
+    <div class="stage" id="stage">
+      <!-- Song Header -->
+      <div class="song-header" id="songHeader" style="display:none">
+        <div class="song-artist" id="songArtist"></div>
+        <h1 class="song-title" id="songTitle"></h1>
+        <div class="song-badges" id="songBadges"></div>
+        <div class="mini-badge" id="miniBadge" style="display:none">MINI</div>
+      </div>
+
+      <!-- Chord sheet -->
+      <div class="chord-sheet" id="chordSheet" style="display:none">
+        <div class="chord-content" id="chordContent"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">♪</div>
+        <div class="empty-title">No track selected</div>
+        <div class="empty-sub">Add a track to your setlist and select it to view chords and lyrics.</div>
+      </div>
+
+      <!-- Video panel -->
+      <div class="video-panel" id="videoPanel">
+        <div class="video-inner">
+          <div class="video-frame" id="videoFrame">
+            <div class="video-placeholder">
+              <span style="font-size:1.5rem;opacity:.3">▶</span>
+              <span>No video linked</span>
             </div>
           </div>
         </div>
-        
-        <div class="toolbar">
-          <button class="tool-btn" id="toggle-video-btn" onclick="toggleVideo()">
-            <span id="tv-icon">📺</span> Video
-          </button>
-          <button class="tool-btn" id="metro-toggle">Metronome</button>
-          <div class="visual-beat" id="visual-beat"></div>
-          <button class="tool-btn" onclick="openEditor(currentTrack.id)">✏️ Edit</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Metronome ticker bar -->
+<div class="metronome-bar" id="metronomeTick">
+  <div class="metronome-fill" id="metronomeFill"></div>
+</div>
+
+<!-- Toast area -->
+<div class="toast-area" id="toastArea"></div>
+
+<!-- ─── Modal ─────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add Track</div>
+      <button class="modal-close" id="btnModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId" />
+      <div class="field-row">
+        <div class="field">
+          <label>Song Title *</label>
+          <input type="text" id="fieldTitle" placeholder="e.g. Wonderwall" />
+        </div>
+        <div class="field">
+          <label>Artist</label>
+          <input type="text" id="fieldArtist" placeholder="e.g. Oasis" />
         </div>
       </div>
-
-      <div class="content-area">
-        <div class="video-panel" id="video-panel">
-  <button class="mini-toggle" onclick="toggleMiniVideo()" id="mini-btn">MINI</button>
-  <span class="info-label" style="margin-bottom: 0.8rem">Reference Track</span>
-  <div class="video-wrapper">
-    <iframe id="ui-video" src="" allowfullscreen></iframe>
+      <div class="field-row">
+        <div class="field">
+          <label>Original Key</label>
+          <select id="fieldKey">
+            <option value="">— Select —</option>
+            <option>C</option><option>C#/Db</option><option>D</option>
+            <option>D#/Eb</option><option>E</option><option>F</option>
+            <option>F#/Gb</option><option>G</option><option>G#/Ab</option>
+            <option>A</option><option>A#/Bb</option><option>B</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>BPM</label>
+          <input type="number" id="fieldBpm" placeholder="e.g. 120" min="20" max="300" />
+        </div>
+      </div>
+      <div class="field">
+        <label>YouTube Video ID</label>
+        <input type="text" id="fieldVideo" placeholder="e.g. dQw4w9WgXcQ" />
+        <div class="field-hint">The part after youtube.com/watch?v=</div>
+      </div>
+      <div class="field">
+        <label>Lyrics &amp; Chords</label>
+        <textarea id="fieldLyrics" placeholder="[Verse 1]&#10;Am    F       C&#10;Look at the stars, look how they shine for you..."></textarea>
+        <div class="field-hint">Put chord names on their own line above the lyrics they fall on.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btnDeleteTrack" style="display:none">Delete Track</button>
+      <button class="btn-secondary" id="btnCancel">Cancel</button>
+      <button class="btn-primary" id="btnSave">Save to RiffDeck</button>
+    </div>
   </div>
 </div>
-        
-        <div class="tab-panel" id="tab-panel">
-          <pre id="ui-tabs">Configure Firebase below to load your band's setlist online.</pre>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <div class="modal-overlay" id="editor-modal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h2 style="font-size:1.2rem;" id="modal-title">Add New Track</h2>
-        <button onclick="closeEditor()" style="background:transparent; color:var(--cream-dim); font-size:2rem; line-height: 1;">×</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="edit-id">
-        <div class="input-group">
-          <label>Song Title</label>
-          <input type="text" id="edit-title" placeholder="e.g. Starlight">
-        </div>
-        <div class="input-group">
-          <label>Artist</label>
-          <input type="text" id="edit-artist" placeholder="e.g. Muse">
-        </div>
-        <div class="input-group">
-          <label>Original Key</label>
-          <input type="text" id="edit-key" placeholder="e.g. B">
-        </div>
-        <div class="input-group">
-          <label>BPM</label>
-          <input type="number" id="edit-bpm" placeholder="e.g. 122">
-        </div>
-        <div class="input-group full-width">
-          <label>YouTube Video ID (Optional)</label>
-          <input type="text" id="edit-yt" placeholder="e.g. Pgum6OT_VH8">
-        </div>
-        <div class="input-group full-width">
-          <label>Lyrics & Chords</label>
-          <textarea id="edit-content" placeholder="Put chords in brackets like this: [C] Hello [Am] World... Use [Chorus] or [Verse] for sections."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="delete-btn" id="delete-btn" onclick="deleteSong()" style="display:none">Delete Track</button>
-        <button class="tool-btn" onclick="closeEditor()">Cancel</button>
-        <button class="btn-primary" onclick="saveSong()">Save to RiffDeck</button>
-      </div>
-    </div>
-  </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   /* =========================================================
-     🔥 PASTE YOUR FIREBASE CONFIG HERE 🔥
+     🔥 FIREBASE CONFIGURATION 🔥
      ========================================================= */
   const firebaseConfig = {
     apiKey: "AIzaSyB1UDS2JIPd58H4fFVfHPJynptnsYmWN1g",
@@ -405,333 +1004,383 @@
   };
   
   let db;
-  let library = [];
-  
   // Initialize Firebase
   if (firebaseConfig.apiKey) {
     const app = initializeApp(firebaseConfig);
     db = getDatabase(app);
-    
-    // Listen for real-time changes
-    const setlistRef = ref(db, 'setlist');
-    onValue(setlistRef, (snapshot) => {
-      const data = snapshot.val();
-      library = data ? Object.values(data) : [];
-      document.getElementById('sync-dot').classList.add('online');
-      document.getElementById('sync-text').textContent = 'Live Sync Active';
-      window.renderSidebar();
-    }, (error) => {
-      document.getElementById('sync-text').textContent = 'Sync Error. Check Rules.';
-    });
-  } else {
-    document.getElementById('sync-text').textContent = 'Offline Mode';
-    const saved = localStorage.getItem('riffDeckData');
-    if (saved) {
-      library = JSON.parse(saved);
-    } else {
-      library = [{
-        id: Date.now(), title: "Example Song", artist: "Setup Firebase to share", bpm: 120, key: "C", youtube_id: "", 
-        content: "[Intro]\n[C] [G] [Am] [F]\n\n[Verse]\n[C] This is a local example.\n[G] Put your Firebase config in the code\n[Am] to enable live syncing with your [F] band."
-      }];
-    }
-    window.renderSidebar();
   }
 
-  // Database Save/Remove
-  window.saveToDatabase = function(newTrack) {
-    if (db) {
-      set(ref(db, 'setlist/' + newTrack.id), newTrack);
-    } else {
-      const index = library.findIndex(t => t.id === newTrack.id);
-      if (index > -1) library[index] = newTrack;
-      else library.push(newTrack);
-      localStorage.setItem('riffDeckData', JSON.stringify(library));
-      window.renderSidebar();
-      window.loadTrack(newTrack);
-    }
-  };
+  /* ─── State ──────────────────────────────────────────── */
+  let tracks = [];
+  let currentId = null;
+  let transpose = 0;
+  let localBpmOffset = 0;
+  let isPlaying = false;
+  let scrollTimer = null;
+  let metronomeTimer = null;
+  let videoOpen = false;
 
-  window.removeFromDatabase = function(id) {
+  /* ─── Elements ───────────────────────────────────────── */
+  const el = id => document.getElementById(id);
+  const sidebar = el('sidebar');
+  const setlist = el('setlist');
+  const chordContent = el('chordContent');
+  
+  // Status Sync UI
+  const syncDot = document.querySelector('.status-dot');
+  const syncText = el('sync-text');
+
+  // Stage UI
+  const songTitle = el('songTitle');
+  const songArtist = el('songArtist');
+  const songBadges = el('songBadges');
+  
+  // Controls
+  const transposeVal = el('transposeVal');
+  const bpmVal = el('bpmVal');
+  const btnPlay = el('btnPlay');
+  const btnMetronome = el('btnMetronome');
+  const metronomeBar = el('metronomeBar');
+  const metronomeFill = el('metronomeFill');
+  const videoFrame = el('videoFrame');
+  const videoPanel = el('videoPanel');
+  const btnVideoToggle = el('btnVideoToggle');
+
+  // Modal
+  const modal = el('modal');
+  const editId = el('editId');
+  const fieldTitle = el('fieldTitle');
+  const fieldArtist = el('fieldArtist');
+  const fieldKey = el('fieldKey');
+  const fieldBpm = el('fieldBpm');
+  const fieldVideoId = el('fieldVideoId');
+  const fieldLyrics = el('fieldLyrics');
+
+  /* ─── Data Management (Firebase + Local Fallback) ────── */
+  function load() {
+    if (db) {
+      const setlistRef = ref(db, 'setlist');
+      onValue(setlistRef, (snapshot) => {
+        const data = snapshot.val();
+        tracks = data ? Object.values(data) : [];
+        
+        // Update connection status UI
+        syncDot.classList.remove('offline');
+        if(syncText) syncText.textContent = 'Sync Active';
+
+        renderSetlist();
+        if (tracks.length > 0 && !currentId) {
+          selectTrack(tracks[0].id);
+        } else if (tracks.length === 0) {
+          currentId = null;
+          renderStage();
+        } else {
+          renderStage(); // Refresh current track if it was edited remotely
+        }
+      }, (error) => {
+        syncDot.classList.add('offline');
+        if(syncText) syncText.textContent = 'Offline';
+      });
+    } else {
+      // LocalStorage fallback if Firebase is down
+      const data = localStorage.getItem('riffdeck_tracks');
+      if (data) { tracks = JSON.parse(data); }
+      syncDot.classList.add('offline');
+      if(syncText) syncText.textContent = 'Local Mode';
+      renderSetlist();
+      if (tracks.length > 0) selectTrack(tracks[0].id);
+    }
+  }
+
+  function saveTrackToDB(track) {
+    if (db) {
+      set(ref(db, 'setlist/' + track.id), track);
+    } else {
+      const idx = tracks.findIndex(t => t.id === track.id);
+      if (idx > -1) tracks[idx] = track; else tracks.push(track);
+      localStorage.setItem('riffdeck_tracks', JSON.stringify(tracks));
+      renderSetlist();
+      selectTrack(track.id);
+    }
+  }
+
+  function deleteTrackFromDB(id) {
     if (db) {
       remove(ref(db, 'setlist/' + id));
     } else {
-      library = library.filter(t => t.id !== id);
-      localStorage.setItem('riffDeckData', JSON.stringify(library));
-      window.renderSidebar();
+      tracks = tracks.filter(t => t.id !== id);
+      localStorage.setItem('riffdeck_tracks', JSON.stringify(tracks));
+      if (currentId === id) { currentId = null; renderStage(); }
+      renderSetlist();
     }
-  };
-
-  /* ════ APP STATE & LOGIC ════ */
-  window.currentTrack = null;
-  let currentTranspose = 0;
-  let isMetroPlaying = false;
-  let metroInterval = null;
-  let isVideoHidden = false;
-  let scrollInterval = null;
-  let scrollSpeed = 1; 
-  let isScrolling = false;
-
-  const setlistEl = document.getElementById('setlist-container');
-  const uiTitle = document.getElementById('ui-title');
-  const uiKey = document.getElementById('ui-key');
-  const uiBpm = document.getElementById('ui-bpm');
-  const uiVideo = document.getElementById('ui-video');
-  const uiTabs = document.getElementById('ui-tabs');
-  const tabPanel = document.getElementById('tab-panel');
-  const metroBtn = document.getElementById('metro-toggle');
-  const visualBeat = document.getElementById('visual-beat');
-
-  /* Mobile Menu Toggle */
-  window.toggleMenu = function() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('sidebar-overlay').classList.toggle('active');
-  };
-
-  window.renderSidebar = function(filteredLib = library) {
-    setlistEl.innerHTML = '';
-    filteredLib.forEach((track) => {
-      const btn = document.createElement('button');
-      btn.className = 'track-btn';
-      if(window.currentTrack && window.currentTrack.id === track.id) btn.classList.add('active');
-      btn.innerHTML = `<div class="track-title">${track.title}</div><div class="track-artist">${track.artist}</div>`;
-      btn.onclick = () => window.loadTrack(track);
-      setlistEl.appendChild(btn);
-    });
-    
-    if(!window.currentTrack && filteredLib.length > 0) window.loadTrack(filteredLib[0]);
-    else if (library.length === 0) clearUI();
   }
 
-  /* Mini Video Toggle */
- window.toggleMiniVideo = function() {
-  const panel = document.getElementById('video-panel');
-  const btn = document.getElementById('mini-btn');
-  const isMini = panel.classList.toggle('mini');
-  
-  btn.textContent = isMini ? 'EXPAND' : 'MINI';
-  
-  // If we go mini, we want to make sure the tab panel scrolls to the top 
-  // so the user doesn't lose their place
-  if(isMini) {
-      document.getElementById('tab-panel').style.paddingTop = "10px";
-  } else {
-      document.getElementById('tab-panel').style.paddingTop = "2rem";
-  }
-}
-  
-  /* Search Functionality */
-  window.handleSearch = function(query) {
-    const q = query.toLowerCase().trim();
-    if (!q) {
-      window.renderSidebar(library);
+  /* ─── UI Rendering ───────────────────────────────────── */
+  function renderSetlist() {
+    if (tracks.length === 0) {
+      setlist.innerHTML = `<div class="sidebar-empty"><strong>No tracks found.</strong>Click "+ Add Track" to build your setlist.</div>`;
       return;
     }
-    const filtered = library.filter(t => 
-      t.title.toLowerCase().includes(q) || 
-      t.artist.toLowerCase().includes(q)
-    );
-    window.renderSidebar(filtered);
+    setlist.innerHTML = tracks.map((t, i) => `
+      <button class="track-item ${t.id === currentId ? 'active' : ''}" onclick="selectTrack('${t.id}')">
+        <div class="track-num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="track-info">
+          <div class="track-title">${t.title}</div>
+          <div class="track-meta">
+            ${t.key ? `<span class="tag tag-key">${t.key}</span>` : ''}
+            ${t.bpm ? `<span class="tag tag-bpm">${t.bpm}</span>` : ''}
+          </div>
+        </div>
+      </button>
+    `).join('');
   }
 
-  window.loadTrack = function(track) {
-    window.currentTrack = track;
-    currentTranspose = 0;
-    window.stopScroll();
+  window.selectTrack = function(id) {
+    if (currentId === id) return;
+    if (isPlaying) stopScroll();
+    if (metronomeTimer) stopMetronome();
     
-    // Close sidebar on mobile after selecting
-    if (window.innerWidth <= 900) {
-       document.getElementById('sidebar').classList.remove('open');
-       document.getElementById('sidebar-overlay').classList.remove('active');
+    currentId = id;
+    transpose = 0;
+    localBpmOffset = 0;
+    
+    if (window.innerWidth < 768) {
+      el('sidebar').style.transform = 'translateX(-100%)';
+      el('btnMenu').classList.remove('open');
     }
     
-    document.querySelectorAll('.track-btn').forEach(b => b.classList.remove('active'));
-    const btns = setlistEl.children;
-    for(let i=0; i<library.length; i++) {
-      if(library[i].id === track.id && btns[i]) btns[i].classList.add('active');
-    }
-    
-    uiTitle.textContent = `${track.title} - ${track.artist}`;
-    uiBpm.textContent = track.bpm || '--';
-    uiVideo.src = track.youtube_id ? `https://www.youtube.com/embed/${track.youtube_id}` : '';
-    
-    window.renderTabs();
-    if(isMetroPlaying) { window.stopMetronome(); window.startMetronome(); }
+    renderSetlist();
+    renderStage();
+  };
+
+  /* ─── Transposer Engine ──────────────────────────────── */
+  const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  function normalizeKey(k) {
+    const map = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
+    return map[k] || k;
+  }
+  function transposeKey(key, n) {
+    const norm = normalizeKey(key);
+    const i = KEYS.indexOf(norm);
+    if (i === -1) return key;
+    return KEYS[(i + n + 120) % 12];
   }
 
-  function clearUI() {
-    window.currentTrack = null;
-    uiTitle.textContent = "Vault is empty";
-    uiBpm.textContent = "--";
-    uiKey.textContent = "--";
-    uiVideo.src = "";
-    uiTabs.innerHTML = "Click '+ Add New Track' to begin.";
+  const CHORD_RE = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add|M)?\d*(?:\/[A-G][#b]?)?)\b/g;
+  function isChordLine(line) {
+    const trimmed = line.trim();
+    if (!trimmed) return false;
+    const noChords = trimmed.replace(CHORD_RE, '');
+    return noChords.replace(/[\s\/\-|]+/g,'').length === 0;
   }
-
-  /* ════ TRANSPOSE LOGIC ════ */
-  const notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
-  const noteMap = { 'C':0, 'C#':1, 'DB':1, 'D':2, 'D#':3, 'EB':3, 'E':4, 'F':5, 'F#':6, 'GB':6, 'G':7, 'G#':8, 'AB':8, 'A':9, 'A#':10, 'BB':10, 'B':11 };
-
-  function transposeNote(noteStr, steps) {
-    if (!noteStr) return "";
-    let idx = noteMap[noteStr.toUpperCase()];
-    if (idx === undefined) return noteStr;
-    let newIdx = (idx + steps) % 12;
-    if (newIdx < 0) newIdx += 12;
-    return notes[newIdx];
-  }
-
-  function transposeChord(chord, steps) {
-    if (steps === 0) return chord;
-    const regex = /^([A-G][#b]?)(.*)$/i;
-    const match = chord.match(regex);
-    if (!match) return chord;
-    let root = transposeNote(match[1], steps);
-    let mod = match[2] || "";
-    if (mod.includes('/')) {
-        let parts = mod.split('/');
-        let slashNote = transposeNote(parts[1], steps);
-        mod = parts[0] + '/' + slashNote;
-    }
-    return root + mod;
-  }
-
-  window.renderTabs = function() {
-    if(!window.currentTrack) return;
-    let formattedTabs = window.currentTrack.content
-      .replace(/\[(.*?)\]/g, (match, innerText) => {
-          if (['intro', 'verse', 'chorus', 'pre-chorus', 'solo', 'bridge', 'outro', 'instrumental'].some(s => innerText.toLowerCase().includes(s))) {
-              return `<span class="section-tag">${innerText}</span>`;
-          } else {
-              let tChord = transposeChord(innerText, currentTranspose);
-              return `<span class="chord">${tChord}</span>`;
+  
+  function renderChords(text, transSteps) {
+    if (!text) return '';
+    return text.split('\n').map(line => {
+      const isSec = line.trim().match(/^\[(.*?)\]$/);
+      if (isSec) return `<div class="chord-section">${isSec[1]}</div>`;
+      
+      if (isChordLine(line)) {
+        let out = line.replace(CHORD_RE, match => {
+          let root = match; let bass = ''; let suffix = '';
+          if (match.includes('/')) {
+            const parts = match.split('/');
+            root = parts[0]; bass = '/' + transposeKey(parts[1], transSteps);
           }
-      });
-    uiTabs.innerHTML = formattedTabs;
+          const m2 = root.match(/^([A-G][#b]?)(.*)$/);
+          if (m2) { root = transposeKey(m2[1], transSteps); suffix = m2[2]; }
+          return `<span class="chord">${root}${suffix}${bass}</span>`;
+        });
+        return `<div class="chord-line">${out}</div>`;
+      }
+      return `<div>${line || '<br>'}</div>`;
+    }).join('');
+  }
 
-    let baseKeyMatch = (window.currentTrack.key || "").match(/^([A-G][#b]?)(.*)$/i);
-    if (baseKeyMatch) {
-        let tKey = transposeChord(baseKeyMatch[1], currentTranspose) + baseKeyMatch[2];
-        let tString = currentTranspose === 0 ? "" : currentTranspose > 0 ? ` (+${currentTranspose})` : ` (${currentTranspose})`;
-        uiKey.textContent = tKey + tString;
-    } else {
-        uiKey.textContent = window.currentTrack.key || "--";
+  function renderStage() {
+    const t = tracks.find(x => x.id === currentId);
+    if (!t) {
+      songTitle.textContent = 'Select a track';
+      songArtist.textContent = '—';
+      songBadges.innerHTML = '';
+      chordContent.innerHTML = '';
+      updateVideo(null);
+      return;
     }
-  }
-
-  document.getElementById('btn-trans-up').addEventListener('click', () => { currentTranspose++; window.renderTabs(); });
-  document.getElementById('btn-trans-down').addEventListener('click', () => { currentTranspose--; window.renderTabs(); });
-
-  /* ════ METRONOME ════ */
-  window.startMetronome = function() {
-    const bpm = window.currentTrack ? window.currentTrack.bpm : 120;
-    if (!bpm || bpm <= 0) return;
-    isMetroPlaying = true;
-    metroBtn.classList.add('active');
-    metroInterval = setInterval(() => {
-      visualBeat.classList.add('tick');
-      setTimeout(() => visualBeat.classList.remove('tick'), 100);
-    }, 60000 / bpm);
-  }
-  window.stopMetronome = function() {
-    isMetroPlaying = false;
-    metroBtn.classList.remove('active');
-    clearInterval(metroInterval);
-  }
-  metroBtn.addEventListener('click', () => { isMetroPlaying ? window.stopMetronome() : window.startMetronome(); });
-
-  /* ════ AUTO SCROLL ════ */
-  window.toggleScroll = function() {
-    const btn = document.getElementById('btn-scroll-play');
-    if(isScrolling) {
-      window.stopScroll();
-    } else {
-      isScrolling = true;
-      btn.textContent = "STOP";
-      scrollInterval = setInterval(() => {
-        tabPanel.scrollTop += scrollSpeed;
-      }, 50);
-    }
-  }
-  window.stopScroll = function() {
-    isScrolling = false;
-    clearInterval(scrollInterval);
-    const btn = document.getElementById('btn-scroll-play');
-    btn.textContent = "PLAY";
-  }
-  window.adjustScroll = function(dir) {
-    scrollSpeed += dir;
-    if(scrollSpeed < 1) scrollSpeed = 1;
-    if(scrollSpeed > 10) scrollSpeed = 10;
-    if(isScrolling) { window.stopScroll(); window.toggleScroll(); }
-  }
-
-  /* ════ THEATER MODE ════ */
-  window.toggleVideo = function() {
-    isVideoHidden = !isVideoHidden;
-    const panel = document.getElementById('video-panel');
-    const btn = document.getElementById('toggle-video-btn');
-    if(isVideoHidden) {
-      panel.classList.add('hidden');
-      btn.classList.add('active');
-      uiVideo.src = ""; 
-    } else {
-      panel.classList.remove('hidden');
-      btn.classList.remove('active');
-      if(window.currentTrack) uiVideo.src = window.currentTrack.youtube_id ? `https://www.youtube.com/embed/${window.currentTrack.youtube_id}` : '';
-    }
-  }
-
-  /* ════ EDITOR MODAL ════ */
-  const modal = document.getElementById('editor-modal');
-  window.openEditor = function(id = null) {
-    document.getElementById('delete-btn').style.display = id ? 'block' : 'none';
-    document.getElementById('modal-title').textContent = id ? 'Edit Track' : 'Add New Track';
     
-    if (id && window.currentTrack) {
-      document.getElementById('edit-id').value = window.currentTrack.id;
-      document.getElementById('edit-title').value = window.currentTrack.title;
-      document.getElementById('edit-artist').value = window.currentTrack.artist;
-      document.getElementById('edit-key').value = window.currentTrack.key;
-      document.getElementById('edit-bpm').value = window.currentTrack.bpm;
-      document.getElementById('edit-yt').value = window.currentTrack.youtube_id;
-      document.getElementById('edit-content').value = window.currentTrack.content;
-    } else {
-      document.getElementById('edit-id').value = '';
-      document.getElementById('edit-title').value = '';
-      document.getElementById('edit-artist').value = '';
-      document.getElementById('edit-key').value = '';
-      document.getElementById('edit-bpm').value = '';
-      document.getElementById('edit-yt').value = '';
-      document.getElementById('edit-content').value = '';
-    }
-    modal.classList.add('active');
+    songTitle.textContent = t.title;
+    songArtist.textContent = t.artist || 'Unknown Artist';
+    
+    let effectiveKey = t.key ? transposeKey(t.key, transpose) : '';
+    let effectiveBpm = t.bpm ? parseInt(t.bpm) + localBpmOffset : 0;
+    
+    songBadges.innerHTML = [
+      effectiveKey ? `<span class="badge badge-key">Key of ${effectiveKey}${transpose !== 0 ? ` <small>(${transpose > 0 ? '+' : ''}${transpose})</small>` : ''}</span>` : '',
+      effectiveBpm ? `<span class="badge badge-bpm">${effectiveBpm} BPM</span>` : '',
+      transpose !== 0 ? `<span class="badge badge-capo">Capo ${Math.abs(transpose)} ${transpose > 0 ? '↑' : '↓'}</span>` : ''
+    ].join('');
+    
+    chordContent.innerHTML = renderChords(t.lyrics, transpose);
+    transposeVal.textContent = transpose > 0 ? `+${transpose}` : transpose;
+    bpmVal.textContent = effectiveBpm ? effectiveBpm : '—';
+    
+    updateVideo(t);
   }
 
-  window.closeEditor = function() { modal.classList.remove('active'); }
+  /* ─── Interactions ───────────────────────────────────── */
+  el('btnTransposeUp').onclick = () => { transpose++; renderStage(); };
+  el('btnTransposeDown').onclick = () => { transpose--; renderStage(); };
+  
+  el('btnBpmUp').onclick = () => { localBpmOffset++; renderStage(); if(metronomeTimer) { stopMetronome(); startMetronome(); } };
+  el('btnBpmDown').onclick = () => { localBpmOffset--; renderStage(); if(metronomeTimer) { stopMetronome(); startMetronome(); } };
 
-  window.saveSong = function() {
-    const id = document.getElementById('edit-id').value;
-    const newTrack = {
-      id: id ? parseInt(id) : Date.now(),
-      title: document.getElementById('edit-title').value || 'Untitled',
-      artist: document.getElementById('edit-artist').value || 'Unknown',
-      key: document.getElementById('edit-key').value,
-      bpm: parseInt(document.getElementById('edit-bpm').value) || 0,
-      youtube_id: document.getElementById('edit-yt').value,
-      content: document.getElementById('edit-content').value
+  /* Auto-Scroll */
+  function startScroll() {
+    isPlaying = true;
+    btnPlay.classList.add('active');
+    btnPlay.innerHTML = `<span style="font-size:1rem;margin-right:4px">⏸</span> Stop`;
+    scrollTimer = setInterval(() => { window.scrollBy(0, 1); }, 40);
+  }
+  function stopScroll() {
+    isPlaying = false;
+    btnPlay.classList.remove('active');
+    btnPlay.innerHTML = `<span style="font-size:1rem;margin-right:4px">▶</span> Play`;
+    clearInterval(scrollTimer);
+  }
+  btnPlay.onclick = () => isPlaying ? stopScroll() : startScroll();
+
+  /* Metronome */
+  function startMetronome() {
+    const t = tracks.find(x => x.id === currentId);
+    let bpm = (t && t.bpm ? parseInt(t.bpm) : 120) + localBpmOffset;
+    if (bpm <= 0) return;
+    
+    btnMetronome.classList.add('active');
+    metronomeBar.classList.add('active');
+    
+    const beatMs = 60000 / bpm;
+    const doTick = () => {
+      metronomeFill.style.transition = 'none';
+      metronomeFill.style.width = '0%';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          metronomeFill.style.transition = `width ${beatMs}ms linear`;
+          metronomeFill.style.width = '100%';
+        });
+      });
+    };
+    doTick();
+    metronomeTimer = setInterval(doTick, beatMs);
+  }
+  function stopMetronome() {
+    btnMetronome.classList.remove('active');
+    metronomeBar.classList.remove('active');
+    clearInterval(metronomeTimer);
+    metronomeTimer = null;
+  }
+  btnMetronome.onclick = () => metronomeTimer ? stopMetronome() : startMetronome();
+
+  /* Video */
+  function updateVideo(t) {
+    if (!videoOpen) return;
+    if (t && t.videoId) {
+      videoFrame.innerHTML = `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(t.videoId)}?rel=0" allowfullscreen></iframe>`;
+    } else {
+      videoFrame.innerHTML = `<div class="video-placeholder"><span style="font-size:1.5rem;opacity:.3">▶</span><span>No video linked</span></div>`;
+    }
+  }
+  btnVideoToggle.onclick = () => {
+    videoOpen = !videoOpen;
+    if (videoOpen) {
+      videoPanel.classList.add('open');
+      btnVideoToggle.classList.add('active');
+      renderStage();
+    } else {
+      videoPanel.classList.remove('open');
+      btnVideoToggle.classList.remove('active');
+      videoFrame.innerHTML = '';
+    }
+  };
+
+  /* ─── Modal & Form Logic ─────────────────────────────── */
+  const openModal = (id = null) => {
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('open'));
+    
+    if (id) {
+      const t = tracks.find(x => x.id === id);
+      el('modalTitle').textContent = 'Edit Track';
+      editId.value = t.id;
+      fieldTitle.value = t.title;
+      fieldArtist.value = t.artist || '';
+      fieldKey.value = t.key || '';
+      fieldBpm.value = t.bpm || '';
+      fieldVideoId.value = t.videoId || '';
+      fieldLyrics.value = t.lyrics || '';
+      el('btnDelete').style.display = 'block';
+    } else {
+      el('modalTitle').textContent = 'Add Track';
+      editId.value = '';
+      fieldTitle.value = '';
+      fieldArtist.value = '';
+      fieldKey.value = '';
+      fieldBpm.value = '';
+      fieldVideoId.value = '';
+      fieldLyrics.value = '';
+      el('btnDelete').style.display = 'none';
+    }
+  };
+
+  const closeModal = () => {
+    modal.classList.remove('open');
+    setTimeout(() => modal.style.display = 'none', 300);
+  };
+
+  el('btnAddTrack').onclick = () => openModal();
+  el('btnEditTrack').onclick = () => { if (currentId) openModal(currentId); };
+  el('btnModalClose').onclick = closeModal;
+  el('btnCancel').onclick = closeModal;
+
+  el('btnSave').onclick = () => {
+    if (!fieldTitle.value.trim()) return alert('Title is required.');
+    
+    // Clean YouTube URL if user pasted full link
+    let vidId = fieldVideoId.value.trim();
+    const ytMatch = vidId.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/);
+    if (ytMatch) vidId = ytMatch[1];
+
+    const track = {
+      id: editId.value || 'trk_' + Date.now().toString(36),
+      title: fieldTitle.value.trim(),
+      artist: fieldArtist.value.trim(),
+      key: fieldKey.value.trim(),
+      bpm: fieldBpm.value.trim(),
+      videoId: vidId,
+      lyrics: fieldLyrics.value
     };
     
-    window.saveToDatabase(newTrack);
-    window.closeEditor();
-  }
+    saveTrackToDB(track);
+    closeModal();
+  };
 
-  window.deleteSong = function() {
-    if(!confirm("Are you sure you want to delete this track?")) return;
-    const id = parseInt(document.getElementById('edit-id').value);
-    window.removeFromDatabase(id);
-    window.currentTrack = null;
-    window.closeEditor();
-  }
+  el('btnDelete').onclick = () => {
+    const id = editId.value;
+    if (!id) return;
+    if (!confirm('Delete this track from the setlist?')) return;
+    deleteTrackFromDB(id);
+    closeModal();
+  };
+
+  /* Mobile Menu */
+  el('btnMenu').onclick = function() {
+    this.classList.toggle('open');
+    const sb = el('sidebar');
+    sb.style.transform = this.classList.contains('open') ? 'translateX(0)' : 'translateX(-100%)';
+  };
+
+  /* Init */
+  load();
+
 </script>
 </body>
 </html>
