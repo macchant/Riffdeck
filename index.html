@@ -209,6 +209,68 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+  /* ── IMPROVED MOBILE VIDEO LOGIC ── */
+  @media (max-width: 900px) {
+    .content-area { flex-direction: column; position: relative; }
+    
+    /* The Video Panel now has a "Mini" mode */
+    .video-panel { 
+      width: 100%; 
+      position: sticky; 
+      top: 0; 
+      z-index: 15; 
+      background: var(--burst-edge); 
+      padding: 0.5rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* MINI MODE: Shrinks video to a small floaty window */
+    .video-panel.mini {
+      width: 160px;
+      position: fixed;
+      top: auto;
+      bottom: 20px;
+      right: 20px;
+      padding: 4px;
+      border: 1px solid var(--gold-bright);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    
+    .video-panel.mini .info-label { display: none; }
+    
+    /* Ensure tabs have room when video is sticky at top */
+    .tab-panel { 
+      padding: 1.5rem 1rem; 
+      z-index: 5; /* Keep chords behind the top sticky video */
+    }
+
+    .video-wrapper { 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+    }
+
+    /* Floating Toggle Button for Mini Mode */
+    .mini-toggle {
+      display: block;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: var(--gold-bright);
+      color: #000;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 800;
+      z-index: 20;
+    }
+  }
+
+  /* Fix for "Chord in the back" - ensures they are visible and layered correctly */
+  .chord {
+    position: relative;
+    z-index: 2;
+  }
 </style>
 </head>
 <body>
@@ -280,11 +342,12 @@
 
       <div class="content-area">
         <div class="video-panel" id="video-panel">
-          <span class="info-label" style="margin-bottom: 0.8rem">Reference Track</span>
-          <div class="video-wrapper">
-            <iframe id="ui-video" src="" allowfullscreen></iframe>
-          </div>
-        </div>
+  <button class="mini-toggle" onclick="toggleMiniVideo()" id="mini-btn">MINI</button>
+  <span class="info-label" style="margin-bottom: 0.8rem">Reference Track</span>
+  <div class="video-wrapper">
+    <iframe id="ui-video" src="" allowfullscreen></iframe>
+  </div>
+</div>
         
         <div class="tab-panel" id="tab-panel">
           <pre id="ui-tabs">Configure Firebase below to load your band's setlist online.</pre>
