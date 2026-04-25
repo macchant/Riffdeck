@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#0f0a07" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -121,7 +121,7 @@
   .sidebar-empty { padding: 32px 16px; text-align: center; color: var(--subtle); font-size: .78rem; line-height: 1.7; }
   .sidebar-empty strong { display: block; color: var(--dim); margin-bottom: 4px; font-size: .9rem; }
 
-  /* ─── Main Stage ─────────────────────────────────────── */
+  /* ─── Main Stage (Desktop First) ──────────────────────── */
   .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; height: calc(100dvh - var(--nav-h)); overflow: hidden; }
 
   /* Controls bar */
@@ -159,9 +159,9 @@
   
   /* ─── IMPROVED CHORD READABILITY ─── */
   .chord { 
-    color: #ffebb3; /* Very bright crisp cream */
-    background: rgba(200, 100, 20, 0.25); /* Deep translucent amber */
-    border: 1px solid rgba(232, 160, 48, 0.5); /* Crisp outline */
+    color: #ffebb3; 
+    background: rgba(200, 100, 20, 0.25); 
+    border: 1px solid rgba(232, 160, 48, 0.5); 
     padding: 2px 6px; 
     border-radius: 4px; 
     font-weight: 800;
@@ -185,6 +185,7 @@
     border-left: 3px solid var(--gold); 
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   }
+
   /* Empty state */
   .empty-state { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; min-height: 400px; text-align: center; padding: 40px; }
   .empty-icon { width: 72px; height: 72px; border-radius: 20px; background: var(--ink-3); border: 1px solid var(--ink-4); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 8px; }
@@ -233,105 +234,6 @@
   .sidebar-overlay { display: none; position: fixed; inset: 0; z-index: 85; background: rgba(5,5,8,.6); backdrop-filter: blur(4px); }
   .sidebar-overlay.open { display: block; animation: fadeIn .2s; }
 
-  /* Responsive */
-/* ─── Mobile Responsive ─────────────────────────────────────── */
-  @media (max-width: 768px) {
-    :root { --sidebar-w: 300px; }
-    .btn-menu { display: flex; }
-    .sidebar { transform: translateX(-100%); box-shadow: 20px 0 60px rgba(0,0,0,.5); top: var(--nav-h); bottom: 0; }
-    .sidebar.open { transform: none; }
-    .main { margin-left: 0; }
-
-    /* 📱 THUMB-ZONE TOOLBAR (The Ultimate Squish Fix) */
-    .controls-bar {
-      position: fixed;
-      top: auto;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 9999; /* Absolute top layer */
-      padding: 10px 16px;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-      background: rgba(15, 10, 7, 0.98); /* Slightly darker to prevent background bleeding */
-      backdrop-filter: blur(16px);
-      border-top: 1px solid var(--ink-4);
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 16px; /* Bigger gap between the different groups */
-      
-      /* Force horizontal scroll */
-      overflow-x: auto;
-      flex-wrap: nowrap;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .controls-bar::-webkit-scrollbar { display: none; }
-    
-    /* 🛑 FORCE EVERYTHING TO KEEP ITS TRUE SIZE 🛑 */
-    .controls-bar > * { flex-shrink: 0 !important; }
-    
-    .ctrl-group { 
-      display: flex; 
-      align-items: center; 
-      gap: 8px; /* Space between + and - buttons */
-      flex-shrink: 0 !important; 
-    }
-    
-    .controls-right { 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      margin-left: 0; 
-      flex-shrink: 0 !important; 
-    }
-
-    /* Protect the individual buttons from crushing */
-    .ctrl-btn { 
-      flex-shrink: 0 !important; 
-      min-width: 48px; /* Force minimum width for fat thumbs */
-      height: 48px; 
-    }
-
-    /* Protect buttons with text inside them */
-    .btn-play, .btn-icon-sm { 
-      flex-shrink: 0 !important; 
-      height: 48px; 
-      white-space: nowrap !important; /* Stops text from wrapping onto a second line */
-      min-width: max-content; 
-    }
-
-    /* Hide unnecessary labels to save space */
-    .ctrl-label { display: none; }
-    .ctrl-divider { flex-shrink: 0 !important; }
-
-    /* Fix spacing for the rest of the app */
-    .song-header { padding: 16px 16px 12px; }
-    .chord-sheet {
-      padding: 16px 16px;
-      padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-    }
-    .metronome-bar { 
-      top: var(--nav-h); bottom: auto; left: 0; height: 6px; 
-      box-shadow: 0 2px 10px var(--amber); z-index: 90;
-    }
-    .toast-area { bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
-
-    /* Modal adjustments */
-    .field-row { grid-template-columns: 1fr; }
-    .modal-footer {
-      flex-direction: column; padding: 12px 16px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); gap: 8px;
-    }
-    .btn-danger { margin-right: 0; width: 100%; justify-content: center; order: 3; }
-    .btn-secondary { width: 100%; justify-content: center; order: 2; }
-    .btn-primary { width: 100%; justify-content: center; order: 1; }
-    .modal-body { padding: 14px 16px; }
-    .modal-header { padding: 16px 16px 12px; }
-    .video-panel.open { max-height: 240px; }
-    .video-inner { padding: 10px 12px; }
-  }
-
   @media (min-width: 769px) {
     .modal-backdrop { align-items: center; padding: 20px; }
     .modal { border-radius: var(--r-xl); max-width: 520px; }
@@ -342,64 +244,66 @@
     .btn-primary { width: auto; order: 0; }
   }
 
-  /* ─── THE ULTIMATE 425px & BELOW SQUISH FIX ─── */
+  /* ─── PERFECTED MOBILE LAYOUT (Unified for everything < 768px) ─── */
   @media (max-width: 768px) {
+    :root { --sidebar-w: 300px; }
+    .btn-menu { display: flex; }
+    .sidebar { transform: translateX(-100%); box-shadow: 20px 0 60px rgba(0,0,0,.5); top: var(--nav-h); bottom: 0; }
+    .sidebar.open { transform: none; }
+    .main { margin-left: 0; }
+
+    /* Thumb-Zone Toolbar - Forced Horizontal Scroll */
     .controls-bar {
-      position: fixed !important;
-      top: auto !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      width: 100vw !important; /* Force exactly screen width */
-      z-index: 9999 !important;
-      
-      display: flex !important;
-      flex-wrap: nowrap !important; /* NO wrapping allowed */
-      overflow-x: auto !important; /* MUST scroll */
-      -webkit-overflow-scrolling: touch !important;
-      
-      padding: 10px 16px !important;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-      gap: 16px !important;
-      justify-content: flex-start !important;
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100vw; 
+      z-index: 9999;
+      background: rgba(15, 10, 7, 0.98); 
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--ink-4);
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    .controls-bar::-webkit-scrollbar { display: none; }
+    
+    /* Strict sizing to prevent any squishing */
+    .controls-bar > * { flex-shrink: 0 !important; }
+    
+    .ctrl-group { display: flex; flex-wrap: nowrap; flex-shrink: 0 !important; align-items: center; gap: 8px; }
+    .controls-right { display: flex; flex-wrap: nowrap; flex-shrink: 0 !important; align-items: center; gap: 12px; margin-left: 0; }
 
-    /* Force every single item directly inside the bar to keep its size */
-    .controls-bar > * {
-      flex-shrink: 0 !important;
-    }
+    .ctrl-btn { flex-shrink: 0 !important; min-width: 44px; width: 44px; height: 44px; }
+    .btn-play, .btn-icon-sm { flex-shrink: 0 !important; height: 44px; padding: 0 16px; white-space: nowrap !important; }
 
-    /* Force the groups (like Font Size and Transpose) to stay horizontal */
-    .ctrl-group, .controls-right {
-      display: flex !important;
-      flex-wrap: nowrap !important;
-      flex-shrink: 0 !important;
-      align-items: center !important;
-      gap: 8px !important;
-    }
-
-    /* Protect the buttons themselves */
-    .ctrl-btn {
-      flex-shrink: 0 !important;
-      min-width: 44px !important;
-      height: 44px !important;
-    }
-
-    .btn-play, .btn-icon-sm {
-      flex-shrink: 0 !important;
-      height: 44px !important;
-      min-width: max-content !important;
-      white-space: nowrap !important; /* Text stays on one line */
-      padding: 0 16px !important;
-    }
-
-    /* Hide the text labels ("Transpose", "BPM") to save horizontal space */
+    /* Hide text labels in the toolbar */
     .ctrl-label { display: none !important; }
     
-    /* Ensure the padding pushes the chords high enough to be seen */
-    .chord-sheet {
-      padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
-    }
+    .song-header { padding: 16px 16px 12px; margin-top: 20px;}
+    .chord-sheet { padding: 16px 16px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+    
+    /* Move metronome bar to the top under header */
+    .metronome-bar { top: var(--nav-h); bottom: auto; left: 0; height: 6px; box-shadow: 0 2px 10px var(--amber); z-index: 90; }
+
+    /* Modal adjustments */
+    .field-row { grid-template-columns: 1fr; }
+    .modal-footer { flex-direction: column; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
+    .btn-danger, .btn-secondary, .btn-primary { width: 100%; justify-content: center; margin-right: 0; }
+    .btn-danger { order: 3; } .btn-secondary { order: 2; } .btn-primary { order: 1; }
+    .modal-body { padding: 14px 16px; }
+    .modal-header { padding: 16px 16px 12px; }
+    .video-panel.open { max-height: 240px; }
+    .video-inner { padding: 10px 12px; }
   }
 </style>
 </head>
@@ -452,7 +356,6 @@
         <button class="ctrl-btn" onclick="changeFontSize(-1)" title="Smaller Text">A-</button>
         <button class="ctrl-btn" onclick="changeFontSize(1)" title="Larger Text">A+</button>
       </div>
-      <div class="ctrl-divider"></div>
       <div class="ctrl-divider"></div>
       <div class="ctrl-group">
         <span class="ctrl-label">BPM</span>
@@ -866,41 +769,27 @@
   });
 
   /* ════ FONT SCALER ════ */
-  let currentFontSize = 1.0; // Starts at 1rem
+  let currentFontSize = 1.0; 
   
   window.changeFontSize = function(direction) {
-    // direction is 1 (larger) or -1 (smaller)
     currentFontSize += (direction * 0.1);
-    
-    // Set limits so it doesn't get too small or insanely huge
     if (currentFontSize < 0.7) currentFontSize = 0.7;
     if (currentFontSize > 2.5) currentFontSize = 2.5;
-    
     document.getElementById('chordContent').style.fontSize = currentFontSize + "rem";
   };
 
-  /* ════ SCREEN WAKE LOCK (Anti-Sleep) ════ */
+  /* ════ SCREEN WAKE LOCK ════ */
   let wakeLock = null;
-
   async function requestWakeLock() {
     try {
       if ('wakeLock' in navigator) {
         wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Screen Wake Lock is active');
       }
-    } catch (err) {
-      console.log('Wake Lock error: ', err);
-    }
+    } catch (err) {}
   }
-
-  // Request the wake lock when the app loads
   requestWakeLock();
-
-  // Re-request the wake lock if the user minimizes the browser and comes back
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      requestWakeLock();
-    }
+    if (document.visibilityState === 'visible') requestWakeLock();
   });
 
   /* ════ EDITOR MODAL ════ */
@@ -964,7 +853,6 @@
     closeEditor();
   });
 
-  // Load initial data if offline
   if (!db) {
     const saved = localStorage.getItem('riffDeckData');
     if (saved) {
