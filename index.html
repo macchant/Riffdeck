@@ -698,36 +698,103 @@ iframe { width: 100%; height: 100%; border: 0; display: block; }
   position: relative;
 }
 
-pre.tab {
-  font-family: var(--font-mono);
-  font-size: clamp(.9rem, 1.4vw, 1rem);
-  line-height: 2.1;
+/* ──────────────────────────────────────────
+   Chart: chord-above-lyric (singer-friendly)
+   ────────────────────────────────────────── */
+.chart {
+  font-family: var(--font-ui);
+  font-size: clamp(1rem, 1.45vw, 1.12rem);
   color: var(--fg-1);
-  white-space: pre-wrap;
-  word-break: break-word;
   padding-bottom: 60vh; /* room to scroll past last line */
   margin: 0;
 }
 
-.chord {
-  color: var(--acc);
-  font-weight: 600;
-  display: inline-block;
+/* Each line is a row of syllable groups */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin: 0 0 6px;
+  min-height: 2.6em;
 }
-.section-tag {
+.line.empty   { min-height: 1.2em; margin-bottom: 4px; }
+.line.lyric-only {
+  display: block;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  min-height: 1.6em;
+}
+
+/* A syllable = one chord above one chunk of lyric */
+.syl {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  vertical-align: bottom;
+  white-space: pre;
+}
+.syl-chord {
+  font-family: var(--font-mono);
+  font-size: .82em;
+  font-weight: 700;
+  color: var(--acc-3);
+  line-height: 1.4;
+  height: 1.4em;
+  white-space: pre;
+  letter-spacing: .01em;
+  text-shadow: 0 0 8px rgba(167,139,250,.35);
+}
+.syl-chord:empty { content: ''; }
+/* When two chords sit on adjacent syllables of the same word ("Run|ning"),
+   nudge the chord slightly so they don't visually collide. */
+.syl + .syl > .syl-chord:not(:empty) { margin-left: .15em; }
+.syl-lyric {
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--fg-1);
+}
+
+/* Block-level section tag (whole-line section markers) */
+.section {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--acc-3);
+  background: var(--acc-bg);
+  border: 1px solid var(--acc-bd);
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  margin: 22px 0 10px;
+}
+.line + .section, .section + .section { margin-top: 14px; }
+
+/* Inline section (rare — section keyword mid-line) */
+.section-inline {
   display: inline-block;
   font-family: var(--font-ui);
   font-size: .65rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--fg-2);
   background: var(--bg-2);
   border-left: 2px solid var(--acc);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 0 var(--r-xs) var(--r-xs) 0;
-  margin-top: 24px;
-  margin-bottom: 6px;
+  margin-right: 6px;
+  align-self: center;
+}
+
+/* Tighter on mobile so it stays one-line where possible */
+@media (max-width: 600px) {
+  .chart       { font-size: 1rem; }
+  .syl-chord   { font-size: .78em; }
+  .line        { min-height: 2.5em; margin-bottom: 4px; }
+  .section     { font-size: .62rem; padding: 4px 9px; margin: 16px 0 8px; }
 }
 
 /* Empty stage */
@@ -1234,7 +1301,7 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
             </button>
           </div>
         </div>
-        <pre class="tab" id="ui-tabs" hidden></pre>
+        <div class="chart" id="ui-tabs" hidden></div>
         <div class="scroll-progress" id="scroll-progress" aria-hidden="true">
           <div class="scroll-progress-fill" id="scroll-progress-fill"></div>
         </div>
@@ -1915,6 +1982,86 @@ function transposeChord(chord, steps) {
   return root + mod;
 }
 
+function isSectionTag(text) {
+  const t = text.toLowerCase();
+  return SECTION_KEYWORDS.some((s) => t.includes(s));
+}
+
+/**
+ * Tokenize a single line of ChordPro into syllable groups.
+ * A "syllable" is a (chord, lyric) pair where the chord (if any) sits above
+ * its lyric chunk. Word boundaries are split into separate tokens so that
+ * long lines wrap at word boundaries (not mid-word).
+ */
+function tokenizeLine(line) {
+  const tokens = [];
+  let currentChord = '';
+  let buffer = '';
+  let i = 0;
+
+  const flush = () => {
+    if (buffer || currentChord) {
+      tokens.push({ chord: currentChord, lyric: buffer });
+      currentChord = '';
+      buffer = '';
+    }
+  };
+
+  while (i < line.length) {
+    const ch = line[i];
+    if (ch === '[') {
+      flush();
+      const close = line.indexOf(']', i);
+      if (close === -1) { buffer += line.slice(i); break; }
+      currentChord = line.slice(i + 1, close);
+      i = close + 1;
+    } else if (ch === ' ') {
+      buffer += ch;
+      flush();
+      i++;
+    } else {
+      buffer += ch;
+      i++;
+    }
+  }
+  flush();
+  return tokens;
+}
+
+function renderChartLine(line) {
+  // Empty line
+  if (!line.trim()) return '<div class="line empty"></div>';
+
+  // Whole-line section tag, e.g. "[Chorus]" or "[Verse 1]"
+  const m = line.trim().match(/^\[([^\]]+)\]$/);
+  if (m && isSectionTag(m[1])) {
+    return `<div class="section">${escHtml(m[1])}</div>`;
+  }
+
+  const tokens = tokenizeLine(line);
+  const hasChord = tokens.some((t) => t.chord);
+
+  // No chords on this line — render as plain lyric (no wasted chord row)
+  if (!hasChord) {
+    return `<div class="line lyric-only">${escHtml(line)}</div>`;
+  }
+
+  let html = '<div class="line">';
+  for (const t of tokens) {
+    if (t.chord && isSectionTag(t.chord)) {
+      html += `<span class="section-inline">${escHtml(t.chord)}</span>`;
+      if (t.lyric) {
+        html += `<span class="syl"><span class="syl-chord"></span><span class="syl-lyric">${escHtml(t.lyric)}</span></span>`;
+      }
+      continue;
+    }
+    const chord = t.chord ? transposeChord(t.chord, state.transpose) : '';
+    html += `<span class="syl"><span class="syl-chord">${escHtml(chord)}</span><span class="syl-lyric">${escHtml(t.lyric || ' ')}</span></span>`;
+  }
+  html += '</div>';
+  return html;
+}
+
 function renderTabs() {
   const song = currentSong();
   if (!song) return;
@@ -1922,13 +2069,8 @@ function renderTabs() {
   dom.emptyStage.style.display = 'none';
   dom.uiTabs.hidden = false;
 
-  const html = (song.content || '').replace(/\[(.*?)\]/g, (_, inner) => {
-    if (SECTION_KEYWORDS.some((s) => inner.toLowerCase().includes(s))) {
-      return `<span class="section-tag">${escHtml(inner)}</span>`;
-    }
-    return `<span class="chord">${escHtml(transposeChord(inner, state.transpose))}</span>`;
-  });
-  dom.uiTabs.innerHTML = html;
+  const lines = (song.content || '').split('\n');
+  dom.uiTabs.innerHTML = lines.map(renderChartLine).join('');
 
   // Key display with offset hint
   const keyMatch = (song.key || '').match(/^([A-G][#b]?)(.*)$/i);
