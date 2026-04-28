@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background tile (works as both standard + maskable; safe area is center 80%) -->
+  <rect width="512" height="512" rx="96" fill="#0a0a12"/>
+  <!-- Subtle grid pattern -->
+  <g fill="#1a1a26" opacity="0.6">
+    <circle cx="64"  cy="64"  r="2"/>
+    <circle cx="128" cy="64"  r="2"/>
+    <circle cx="192" cy="64"  r="2"/>
+    <circle cx="256" cy="64"  r="2"/>
+    <circle cx="320" cy="64"  r="2"/>
+    <circle cx="384" cy="64"  r="2"/>
+    <circle cx="448" cy="64"  r="2"/>
+    <circle cx="64"  cy="448" r="2"/>
+    <circle cx="448" cy="448" r="2"/>
+  </g>
+  <!-- The pick + strings mark -->
+  <g transform="translate(256 256)">
+    <!-- Pick body -->
+    <path d="M0 -120 L168 -80 L136 96 Q72 224 0 224 Q-72 224 -136 96 L-168 -80 Z" fill="#8b5cf6"/>
+    <!-- String lines through it -->
+    <line x1="-128" y1="-32" x2="128" y2="-32" stroke="#0a0a12" stroke-width="14" stroke-linecap="round"/>
+    <line x1="-112" y1="32"  x2="112" y2="32"  stroke="#0a0a12" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>
