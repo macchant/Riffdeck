@@ -4,7 +4,7 @@
  *   - Static assets (manifest, icons): cache-first
  *   - Firebase / YouTube / fonts: passthrough (network-only)
  */
-const CACHE = 'riffdeck-v1.6';
+const CACHE = 'riffdeck-v1.7';
 const APP_SHELL = [
   './',
   './index.html',

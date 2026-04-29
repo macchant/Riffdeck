@@ -1140,6 +1140,65 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   MOBILE COACH MARK
+   One-time hint pointing at the hamburger so first-time mobile users
+   discover the song list. Hidden on desktop and after first dismissal.
+══════════════════════════════════════════════════════════════ */
+.menu-tip {
+  position: fixed;
+  top: calc(var(--nav-h) + 8px);
+  left: 10px;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  background: var(--acc);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .005em;
+  border-radius: 12px;
+  box-shadow:
+    0 10px 28px rgba(124, 58, 237, .45),
+    0 0 0 1px rgba(255, 255, 255, .08);
+  max-width: calc(100vw - 20px);
+  pointer-events: auto;
+  animation: menu-tip-bob 1.8s ease-in-out infinite;
+}
+.menu-tip.show { display: inline-flex; }
+.menu-tip-arrow {
+  position: absolute;
+  top: -5px;
+  left: 18px;
+  width: 12px; height: 12px;
+  background: var(--acc);
+  transform: rotate(45deg);
+  border-top-left-radius: 3px;
+}
+.menu-tip-text { line-height: 1.2; white-space: nowrap; }
+.menu-tip-close {
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.menu-tip-close:hover { background: rgba(255, 255, 255, .3); }
+@keyframes menu-tip-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+@media (min-width: 901px) {
+  .menu-tip { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
    PRINT-ONLY HEADER (hidden on screen)
 ══════════════════════════════════════════════════════════════ */
 .print-header { display: none; }
@@ -1450,11 +1509,11 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
         </button>
         <span class="beat-dot" id="beat-dot" aria-hidden="true"></span>
 
-        <!-- Tap tempo -->
-        <button class="tool-btn" id="btn-tap" title="Tap tempo (T)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          <span>Tap</span>
-        </button>
+        <!-- BPM nudge -->
+        <div class="ctrl" role="group" aria-label="Adjust BPM">
+          <button class="ctrl-btn" id="btn-bpm-down" aria-label="Decrease BPM" title="Slower BPM (hold to repeat) — [">−</button>
+          <button class="ctrl-btn" id="btn-bpm-up" aria-label="Increase BPM" title="Faster BPM (hold to repeat) — ]">+</button>
+        </div>
 
         <!-- Video -->
         <button class="tool-btn" id="btn-video" aria-pressed="false" title="Toggle reference video (V)">
@@ -1506,6 +1565,13 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
       </div>
     </div>
   </main>
+</div>
+
+<!-- First-time mobile coach mark for the hamburger menu -->
+<div id="menu-tip" class="menu-tip" role="status" aria-live="polite">
+  <span class="menu-tip-arrow" aria-hidden="true"></span>
+  <span class="menu-tip-text">Tap here to open your songs</span>
+  <button class="menu-tip-close" id="menu-tip-close" aria-label="Dismiss tip">×</button>
 </div>
 
 <!-- Toast -->
@@ -1622,7 +1688,7 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
         <div class="cheat"><span class="cheat-label">Transpose down / up</span><span class="cheat-keys"><kbd class="kbd">−</kbd><kbd class="kbd">=</kbd></span></div>
         <div class="cheat"><span class="cheat-label">Reset transpose</span><span class="cheat-keys"><kbd class="kbd">0</kbd></span></div>
         <div class="cheat"><span class="cheat-label">Toggle metronome</span><span class="cheat-keys"><kbd class="kbd">M</kbd></span></div>
-        <div class="cheat"><span class="cheat-label">Tap tempo</span><span class="cheat-keys"><kbd class="kbd">T</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Nudge BPM −/+</span><span class="cheat-keys"><kbd class="kbd">[</kbd><kbd class="kbd">]</kbd></span></div>
         <div class="cheat"><span class="cheat-label">Toggle video</span><span class="cheat-keys"><kbd class="kbd">V</kbd></span></div>
         <div class="cheat"><span class="cheat-label">Toggle sidebar</span><span class="cheat-keys"><kbd class="kbd">S</kbd></span></div>
         <div class="cheat"><span class="cheat-label">New song</span><span class="cheat-keys"><kbd class="kbd">N</kbd></span></div>
@@ -1678,7 +1744,6 @@ const state = {
   scrolling: false,
   metro: { playing: false, ctx: null, scheduler: null, nextBeat: 0, beat: 0 },
   videoVisible: false,
-  taps: [],               // tap-tempo timestamps
   prefs: loadPrefs(),     // device-local prefs
 };
 
@@ -1692,6 +1757,7 @@ const dom = {
   search: $('search-input'),
   sidebar: $('sidebar'), sidebarOverlay: $('sidebar-overlay'),
   menuToggle: $('menu-toggle'),
+  menuTip: $('menu-tip'), menuTipClose: $('menu-tip-close'),
   songList: $('song-list'),
   activeSetlistLabel: $('active-setlist-label'),
   songsCount: $('songs-count'),
@@ -1710,7 +1776,8 @@ const dom = {
   btnTransUp: $('btn-trans-up'), btnTransDown: $('btn-trans-down'),
   btnScrollUp: $('btn-scroll-up'), btnScrollDown: $('btn-scroll-down'),
   btnScrollPlay: $('btn-scroll-play'),
-  btnMetro: $('btn-metro'), btnTap: $('btn-tap'),
+  btnMetro: $('btn-metro'),
+  btnBpmDown: $('btn-bpm-down'), btnBpmUp: $('btn-bpm-up'),
   btnVideo: $('btn-video'), btnEdit: $('btn-edit'),
   btnShortcuts: $('btn-shortcuts'), btnShare: $('btn-share'),
   btnPrint: $('btn-print'),
@@ -2388,39 +2455,44 @@ function toggleMetronome() {
 dom.btnMetro.addEventListener('click', toggleMetronome);
 
 /* ══════════════════════════════════════════════════════════════
-   TAP TEMPO
+   BPM NUDGE — quick tempo adjust (replaces tap-tempo)
+   Click  = ±1 BPM
+   Hold   = auto-repeat ±1 every 80ms (after 400ms hold)
 ══════════════════════════════════════════════════════════════ */
-function tapTempo() {
-  const now = performance.now();
-  // Reset window if last tap >2s ago
-  if (state.taps.length && now - state.taps[state.taps.length - 1] > 2000) state.taps = [];
-  state.taps.push(now);
-  if (state.taps.length > 5) state.taps.shift();
-
-  if (state.taps.length < 2) {
-    dom.btnTap.classList.add('active');
-    setTimeout(() => dom.btnTap.classList.remove('active'), 120);
-    return;
-  }
-
-  const intervals = [];
-  for (let i = 1; i < state.taps.length; i++) intervals.push(state.taps[i] - state.taps[i - 1]);
-  const avgMs = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-  const bpm = Math.round(60000 / avgMs);
-  if (bpm < 30 || bpm > 300) return;
-
-  dom.uiBpm.textContent = bpm;
-  dom.btnTap.classList.add('active');
-  setTimeout(() => dom.btnTap.classList.remove('active'), 120);
-
+function nudgeBpm(delta) {
   const song = currentSong();
-  if (song) {
-    song.bpm = bpm;
-    saveSong(song);
-  }
+  if (!song) { toast('Open a song first'); return; }
+  const cur = +song.bpm > 0 ? +song.bpm : 120;
+  const next = Math.max(20, Math.min(300, cur + delta));
+  if (next === cur) return;
+  song.bpm = next;
+  dom.uiBpm.textContent = next;
+  saveSong(song);
   if (state.metro.playing) { stopMetronome(); startMetronome(); }
 }
-dom.btnTap.addEventListener('click', tapTempo);
+
+function bindBpmHold(btn, delta) {
+  let holdTimer = null;
+  let repeatTimer = null;
+  const stop = () => {
+    if (holdTimer)   { clearTimeout(holdTimer);  holdTimer = null; }
+    if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
+  };
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    btn.setPointerCapture?.(e.pointerId);
+    nudgeBpm(delta);
+    holdTimer = setTimeout(() => {
+      repeatTimer = setInterval(() => nudgeBpm(delta), 80);
+    }, 400);
+  });
+  btn.addEventListener('pointerup', stop);
+  btn.addEventListener('pointerleave', stop);
+  btn.addEventListener('pointercancel', stop);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+bindBpmHold(dom.btnBpmDown, -1);
+bindBpmHold(dom.btnBpmUp,   +1);
 
 /* ══════════════════════════════════════════════════════════════
    AUTO-SCROLL (constant pixel-rate, rAF-driven)
@@ -2530,6 +2602,7 @@ function openSidebar()  {
   dom.sidebarOverlay.classList.add('active');
   dom.menuToggle.classList.add('open');
   dom.menuToggle.setAttribute('aria-expanded', 'true');
+  dismissMenuTip(true); // user found it — don't show again
 }
 function closeSidebar() {
   dom.sidebar.classList.remove('open');
@@ -2540,6 +2613,38 @@ function closeSidebar() {
 function toggleSidebar() { dom.sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); }
 dom.menuToggle.addEventListener('click', toggleSidebar);
 dom.sidebarOverlay.addEventListener('click', closeSidebar);
+
+/* ══════════════════════════════════════════════════════════════
+   FIRST-TIME COACH MARK (mobile only)
+   Tells new mobile users the song list lives behind the hamburger.
+   Auto-dismisses permanently on first menu open or close-button tap.
+   Soft-dismisses (no persistence) after 8s so it'll re-appear next visit
+   until the user actually opens the menu.
+══════════════════════════════════════════════════════════════ */
+function dismissMenuTip(persist) {
+  if (!dom.menuTip.classList.contains('show')) return;
+  dom.menuTip.classList.remove('show');
+  if (persist) {
+    state.prefs.menuTipShown = true;
+    savePrefs();
+  }
+}
+function maybeShowMenuTip() {
+  if (state.prefs.menuTipShown) return;
+  if (window.innerWidth > 900) return;
+  if (dom.sidebar.classList.contains('open')) return;
+  dom.menuTip.classList.add('show');
+  setTimeout(() => dismissMenuTip(false), 8000);
+}
+dom.menuTipClose.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dismissMenuTip(true);
+});
+dom.menuTip.addEventListener('click', (e) => {
+  if (e.target === dom.menuTipClose) return;
+  dismissMenuTip(true);
+  openSidebar();
+});
 
 /* ══════════════════════════════════════════════════════════════
    SEARCH
@@ -2793,7 +2898,8 @@ function onKey(e) {
     case 'arrowleft':  e.preventDefault(); navigateSong(-1); break;
     case 'arrowright': e.preventDefault(); navigateSong(+1); break;
     case 'm':          toggleMetronome(); break;
-    case 't':          tapTempo(); break;
+    case '[':          e.preventDefault(); nudgeBpm(-1); break;
+    case ']':          e.preventDefault(); nudgeBpm(+1); break;
     case 'v':          toggleVideo(); break;
     case 's':          toggleSidebar(); break;
     case 'n':          openSongEditor(null); break;
@@ -2851,6 +2957,8 @@ initFirebase();
 // If Firebase doesn't fire in 1s, populate from localStorage
 setTimeout(() => { if (state.library.length === 0 && !state.db) fallbackLocal(); }, 1000);
 updateBottomPadding();
+// Mobile-only first-run hint pointing at the hamburger menu
+setTimeout(maybeShowMenuTip, 700);
 </script>
 </body>
 </html>
