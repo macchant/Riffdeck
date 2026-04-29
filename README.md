@@ -18,7 +18,7 @@
 - **Keyboard shortcuts** — `[` / `]` to nudge BPM down / up. Browser auto-repeat works while held.
 - **First-time mobile coach mark** — a one-time hint pointing at the hamburger menu so new mobile users discover the song list. Permanently dismisses on first menu open.
 
-### v1.6 — Print feature (Ultimate-Guitar style)
+### v1.6 — Print feature (Clean style)
 
 - **Print button** in the controls bar opens a clean print dialog.
 - **Print-only header** — song title, artist, key, BPM, duration, and capo/transpose offset.
