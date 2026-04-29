@@ -705,7 +705,7 @@ iframe { width: 100%; height: 100%; border: 0; display: block; }
   font-family: var(--font-ui);
   font-size: clamp(1rem, 1.45vw, 1.12rem);
   color: var(--fg-1);
-  padding-bottom: 60vh; /* room to scroll past last line */
+  padding-bottom: 22vh; /* breathing room past last line; auto-scroll stops here */
   margin: 0;
 }
 
@@ -1138,6 +1138,195 @@ iframe { width: 100%; height: 100%; border: 0; display: block; }
 button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
   outline-offset: 2px;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT-ONLY HEADER (hidden on screen)
+══════════════════════════════════════════════════════════════ */
+.print-header { display: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT STYLESHEET — clean white-paper chord chart
+   Nuclear reset: strip ALL backgrounds/colors/shadows globally,
+   then re-apply minimal print typography.
+══════════════════════════════════════════════════════════════ */
+@media print {
+  @page { size: auto; margin: 16mm 14mm; }
+
+  /* ── Nuclear reset: kill every screen color/background/shadow ── */
+  *, *::before, *::after {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* ── Hide everything by default; explicitly show only the chart path ── */
+  body > * { display: none !important; }
+  body > .app { display: block !important; }
+  body > .app > .sidebar,
+  body > .app > .sidebar-overlay { display: none !important; }
+  body > .app > .stage { display: block !important; }
+  body > .app > .stage > .track-head,
+  body > .app > .stage > .content > .video-panel { display: none !important; }
+  body > .app > .stage > .content { display: block !important; }
+  body > .app > .stage > .content > .tab-panel { display: block !important; }
+
+  /* Hide remaining decorations inside the panel */
+  .empty-stage, .scroll-progress, .toast-area, .modal,
+  .footer, .icon-btn, .menu-toggle, .controls,
+  #cookie-banner { display: none !important; }
+
+  /* Reset structural containers to flow naturally on paper */
+  .app, .stage, .content, .tab-panel {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    flex: none !important;
+  }
+
+  /* ── Print header (title block) ── */
+  .print-header {
+    display: block !important;
+    border: none !important;
+    border-bottom: 0.6pt solid #000 !important;
+    padding: 0 0 3mm 0 !important;
+    margin: 0 0 6mm 0 !important;
+  }
+  .print-title {
+    font-family: Georgia, serif !important;
+    font-size: 18pt !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    margin: 0 0 1mm 0 !important;
+    padding: 0 !important;
+    letter-spacing: -0.005em;
+  }
+  .print-artist {
+    font-size: 11pt !important;
+    font-weight: 400 !important;
+    font-style: italic !important;
+    margin: 0 0 2.5mm 0 !important;
+    padding: 0 !important;
+  }
+  .print-artist:empty { display: none !important; }
+  .print-meta {
+    font-family: 'Courier New', monospace !important;
+    font-size: 9pt !important;
+    letter-spacing: 0.02em;
+  }
+  .print-meta:empty { display: none !important; }
+
+  /* ── Chart body ── */
+  .chart {
+    font-family: Georgia, serif !important;
+    font-size: 11pt !important;
+    line-height: 1.45 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Section headings: small caps, bold, generous top margin, no pill */
+  .section {
+    display: block !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 9.5pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 5mm 0 1.5mm 0 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .section-inline {
+    display: inline-block !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 3mm 0 0 !important;
+  }
+
+  /* Lyric/chord lines */
+  .line {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin: 0 0 3pt 0 !important;
+    padding: 0 !important;
+    min-height: 0;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .line.empty {
+    min-height: 4pt !important;
+    margin-bottom: 0 !important;
+  }
+  .line.lyric-only {
+    display: block !important;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+
+  /* Syllable groups: chord stacked above lyric chunk */
+  .syl {
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    vertical-align: bottom;
+    white-space: pre;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .syl-chord {
+    font-family: 'Courier New', monospace !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    height: 1.2em !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    letter-spacing: 0;
+  }
+  .syl-lyric {
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Reset h1/h2 inheritance from screen styles */
+  h1, h2, h3, h4, h5, h6 {
+    background: none !important;
+    padding: 0 !important;
+  }
+  h1, h2, h3 { page-break-after: avoid !important; }
+}
 </style>
 </head>
 <body>
@@ -1184,6 +1373,9 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
       <div class="sync-dot" id="sync-dot"></div>
       <span id="sync-text">CONNECTING</span>
     </div>
+    <button class="icon-btn" id="btn-print" aria-label="Print current song" title="Print song (Ctrl+P)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+    </button>
     <button class="icon-btn" id="btn-shortcuts" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01"/><path d="M10 10h.01"/><path d="M14 10h.01"/><path d="M18 10h.01"/><path d="M6 14h.01"/><path d="M18 14h.01"/><path d="M10 14h4"/></svg>
     </button>
@@ -1288,6 +1480,12 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
       </div>
 
       <div class="tab-panel" id="tab-panel">
+        <!-- Print-only header: hidden on screen, shown on paper -->
+        <header class="print-header" id="print-header" aria-hidden="true">
+          <h1 class="print-title" id="print-title"></h1>
+          <p class="print-artist" id="print-artist"></p>
+          <div class="print-meta" id="print-meta"></div>
+        </header>
         <div class="empty-stage" id="empty-stage">
           <div class="empty-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -1515,6 +1713,9 @@ const dom = {
   btnMetro: $('btn-metro'), btnTap: $('btn-tap'),
   btnVideo: $('btn-video'), btnEdit: $('btn-edit'),
   btnShortcuts: $('btn-shortcuts'), btnShare: $('btn-share'),
+  btnPrint: $('btn-print'),
+  printHeader: $('print-header'), printTitle: $('print-title'),
+  printArtist: $('print-artist'), printMeta: $('print-meta'),
   /* Editor modal */
   editorModal: $('editor-modal'), editorTitle: $('editor-title'),
   editorClose: $('editor-close'), editorCancel: $('editor-cancel'),
@@ -2083,6 +2284,16 @@ function renderTabs() {
   const sign = state.transpose > 0 ? `+${state.transpose}` : (state.transpose < 0 ? `${state.transpose}` : '±0');
   dom.uiTrans.textContent = sign;
   dom.uiTrans.classList.toggle('active', state.transpose !== 0);
+
+  // Populate the print-only header
+  dom.printTitle.textContent  = song.title || 'Untitled';
+  dom.printArtist.textContent = song.artist || '';
+  const metaParts = [];
+  if (song.key)      metaParts.push(`Key: ${dom.uiKey.textContent}`);
+  if (song.bpm)      metaParts.push(`BPM: ${song.bpm}`);
+  if (song.duration) metaParts.push(`Duration: ${song.duration}`);
+  if (state.transpose) metaParts.push(`Capo/Transpose: ${sign}`);
+  dom.printMeta.textContent = metaParts.join('  ·  ');
 }
 
 function setTranspose(n) {
@@ -2212,52 +2423,47 @@ function tapTempo() {
 dom.btnTap.addEventListener('click', tapTempo);
 
 /* ══════════════════════════════════════════════════════════════
-   SMART AUTO-SCROLL (rAF-driven, duration-aware)
+   AUTO-SCROLL (constant pixel-rate, rAF-driven)
 ══════════════════════════════════════════════════════════════ */
 let scrollRaf = null;
-let scrollStart = 0;
-let scrollFrom = 0;
-let scrollTotal = 0;
-let scrollDurationMs = 0;
-let scrollPausedAt = 0;
+
+/**
+ * Auto-scroll: dead-simple constant-rate scrolling, modeled on the legacy
+ * `setInterval` approach but using rAF for smoothness and frame-time delta
+ * so the rate stays consistent regardless of refresh rate.
+ *
+ * No duration logic, no easing, no auto-stop, no pause-on-touch. The user
+ * presses STOP (or hits Space) when they're done. Predictable and bulletproof.
+ */
+let scrollLastT = 0;
 
 function startScroll() {
-  const song = currentSong();
-  if (!song) return;
-
   const panel = dom.tabPanel;
-  const total = panel.scrollHeight - panel.clientHeight;
-  if (total <= 0) { toast('Chart fits the screen — nothing to scroll'); return; }
-
-  scrollTotal = total;
-  scrollFrom = panel.scrollTop;
-
-  // Decide duration:
-  // 1. If song.duration provided → exact remaining time pro-rated by current scroll
-  // 2. Else fall back to scrollSpeed-based (1=very slow, 10=very fast)
-  const songDurSec = parseDuration(song.duration);
-  if (songDurSec > 0) {
-    const remainingFrac = (scrollTotal - scrollFrom) / scrollTotal;
-    scrollDurationMs = songDurSec * 1000 * remainingFrac;
-  } else {
-    // Map scrollSpeed (1..10) to ms-per-pixel: 1→90ms, 10→9ms
-    const msPerPx = 90 - (state.scrollSpeed - 1) * 9;
-    scrollDurationMs = (scrollTotal - scrollFrom) * msPerPx / 6;
+  if (panel.scrollHeight - panel.clientHeight <= 4) {
+    toast('Chart fits the screen — nothing to scroll');
+    return;
   }
 
-  scrollStart = performance.now();
   state.scrolling = true;
+  scrollLastT = 0;
   dom.btnScrollPlay.textContent = 'STOP';
   dom.btnScrollPlay.classList.add('active');
   dom.scrollProgress.classList.add('active');
-  dom.scrollProgressFill.style.width = '0%';
 
   function step(now) {
     if (!state.scrolling) return;
-    const t = Math.min(1, (now - scrollStart) / scrollDurationMs);
-    panel.scrollTop = scrollFrom + (scrollTotal - scrollFrom) * t;
-    dom.scrollProgressFill.style.width = (t * 100) + '%';
-    if (t >= 1) { stopScroll(); return; }
+    if (scrollLastT) {
+      const dt = now - scrollLastT;
+      // scrollSpeed 1..10 → 25..250 px/sec (legacy was ~50 px/sec at speed 2)
+      const pxPerSec = state.scrollSpeed * 25;
+      panel.scrollTop += pxPerSec * dt / 1000;
+    }
+    scrollLastT = now;
+    const total = panel.scrollHeight - panel.clientHeight;
+    if (total > 0) {
+      const pct = Math.min(100, (panel.scrollTop / total) * 100);
+      dom.scrollProgressFill.style.width = pct + '%';
+    }
     scrollRaf = requestAnimationFrame(step);
   }
   scrollRaf = requestAnimationFrame(step);
@@ -2267,6 +2473,7 @@ function stopScroll() {
   state.scrolling = false;
   if (scrollRaf) cancelAnimationFrame(scrollRaf);
   scrollRaf = null;
+  scrollLastT = 0;
   dom.btnScrollPlay.textContent = 'PLAY';
   dom.btnScrollPlay.classList.remove('active');
   dom.scrollProgress.classList.remove('active');
@@ -2285,15 +2492,10 @@ function bumpScroll(delta) {
     savePrefs();
   }
   toast(`Scroll speed: ${state.scrollSpeed}/10`);
-  if (state.scrolling) { stopScroll(); startScroll(); }
+  // Speed change takes effect on next frame automatically — no restart needed.
 }
 dom.btnScrollUp.addEventListener('click', () => bumpScroll(+1));
 dom.btnScrollDown.addEventListener('click', () => bumpScroll(-1));
-
-// Pause auto-scroll on user interaction
-['wheel', 'touchstart'].forEach((ev) => {
-  dom.tabPanel.addEventListener(ev, () => { if (state.scrolling) stopScroll(); }, { passive: true });
-});
 
 /* ══════════════════════════════════════════════════════════════
    TRANSPOSE BUTTONS
@@ -2499,6 +2701,28 @@ function closeShortcuts() { hideModal(dom.shortcutsModal); }
 dom.btnShortcuts.addEventListener('click', openShortcuts);
 dom.shortcutsClose.addEventListener('click', closeShortcuts);
 dom.shortcutsModal.addEventListener('click', (e) => { if (e.target === dom.shortcutsModal) closeShortcuts(); });
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT — Ultimate-Guitar-style white paper, black text
+══════════════════════════════════════════════════════════════ */
+function printSong() {
+  if (!currentSong()) {
+    toast('Open a song first');
+    return;
+  }
+  // Stop auto-scroll & metronome before printing so they don't keep firing
+  if (state.scrolling) stopScroll();
+  // Re-render to make sure print-header is in sync with current transpose
+  renderTabs();
+  // One-time tip about disabling the browser's auto-injected header/footer
+  if (!localStorage.getItem('riffPrintTipShown')) {
+    toast('Tip: in the print dialog, uncheck "Headers and footers" for a cleaner page');
+    localStorage.setItem('riffPrintTipShown', '1');
+  }
+  // Brief delay so the browser commits any pending layout before opening the dialog
+  setTimeout(() => window.print(), 50);
+}
+dom.btnPrint.addEventListener('click', printSong);
 
 /* Generic modal helpers */
 function showModal(el) { el.classList.add('active'); }
