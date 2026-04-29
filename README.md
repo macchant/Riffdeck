@@ -9,28 +9,46 @@
 
 ---
 
-## What's new in v1.0 — Premium edition
+## Recent updates
 
-A from-scratch SaaS-style redesign of the original RiffDeck, with the core feature set every gigging musician actually needs.
+### v1.7 — BPM nudge + mobile coach mark
+
+- **TAP tempo removed.** Was confusing first-time users; replaced with simpler controls.
+- **BPM nudge buttons** — `− / +` next to the metronome. Click for ±1, **hold** for auto-repeat. Range 20–300.
+- **Keyboard shortcuts** — `[` / `]` to nudge BPM down / up. Browser auto-repeat works while held.
+- **First-time mobile coach mark** — a one-time hint pointing at the hamburger menu so new mobile users discover the song list. Permanently dismisses on first menu open.
+
+### v1.6 — Print feature (Ultimate-Guitar style)
+
+- **Print button** in the controls bar opens a clean print dialog.
+- **Print-only header** — song title, artist, key, BPM, duration, and capo/transpose offset.
+- **Nuclear-reset stylesheet** — strips every screen color, shadow, and UI chrome. Pure black-on-white serif typography. Optimized for letter / A4 portrait.
+- **One-time tip toast** reminding users to disable browser headers/footers in the print dialog for the cleanest output.
+
+### v1.0 — Premium SaaS rebuild
+
+A from-scratch redesign of the original RiffDeck with the core feature set every gigging musician actually needs.
 
 ### Visual
 
-- Cleaner SaaS aesthetic — zinc grayscale + signature **orange** accent
+- Cleaner SaaS aesthetic — **slate + electric violet** palette
 - Inter (UI) + JetBrains Mono (chords/code) — no decorative fonts
 - Fresh logo: pick + strings mark, recognizable at favicon size
-- Subtle dotted grid background, no gold gradients, more whitespace
+- Subtle dotted grid background, more whitespace
 - Full dark mode with WCAG-AA contrast
 
 ### Features
 
 - **Setlists** — name and order multiple sets (Friday Gig, Acoustic, Rehearsal). Drag-reorder songs within a setlist. Share by link.
 - **Smart auto-scroll** — `requestAnimationFrame`-driven, never drifts. If you set the song duration, the chart scrolls to finish exactly when the song ends. Otherwise falls back to per-song speed memory (1–10).
-- **Tap tempo** — tap the button (or press `T`) 4× to set BPM. Auto-saves to the song.
+- **BPM nudge** — click `− / +` for ±1 BPM, hold to auto-repeat. Or use `[` / `]` keys.
+- **Web Audio metronome** — no drift, accent on beat 1, restarts cleanly when BPM changes.
+- **Print** — clean black-on-white chord chart for paper or PDF. Hides all UI chrome.
 - **Per-song memory** — transpose offset and scroll speed remember themselves per song, per device.
 - **Keyboard shortcuts** — full one-hand operation. Press `?` to see them all.
 - **PWA** — install to home screen / desktop, works offline at gigs (app shell cached, songs from localStorage if Firebase down).
 - **Setlist share-links** — `?s=<setlistId>` URLs let bandmates open the same set.
-- **Pause-on-touch** — auto-scroll pauses when you scroll/tap, so you don't fight it.
+- **Mobile coach mark** — first-time hint so new users find the hamburger menu.
 
 ### Carried over from the original
 
@@ -52,7 +70,7 @@ A from-scratch SaaS-style redesign of the original RiffDeck, with the core featu
 | Transpose down / up    | `−` / `=` |
 | Reset transpose        | `0`       |
 | Toggle metronome       | `M`       |
-| Tap tempo              | `T`       |
+| Nudge BPM − / +        | `[` / `]` |
 | Toggle video           | `V`       |
 | Toggle sidebar         | `S`       |
 | New song               | `N`       |
@@ -161,9 +179,11 @@ The virtual `"all"` setlist is computed client-side and represents every song in
 
 ## Roadmap
 
-- **v1.1** — chord diagrams on tap, role views (singer/guitarist/drummer), section minimap
-- **v1.2** — Svelte rebuild, Supabase backend option, real-time band cursor
-- **v1.3** — print/PDF export, Spotify/Apple Music refs, count-in before auto-scroll
+- **v1.8** — backing-track audio (per-song MP3 + lockscreen / Media Session controls)
+- **v1.9** — section quick-jump pills above the chart
+- **v2.0** — band sync ("Stage Sync") — multi-device scroll position via Firebase
+- **v2.1** — chord diagrams on tap, role views (singer/guitarist/drummer)
+- **Future** — AI chord-from-YouTube extraction, count-in metronome, MIDI pedalboard, native iOS/Android wrapper
 
 ---
 
