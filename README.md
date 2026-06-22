@@ -18,7 +18,6 @@
 
 <img src="docs/hero.gif" alt="RiffDeck auto-scrolling a chord chart with the metronome running" width="800"/>
 
-<sub><em>Replace <code>docs/hero.gif</code> with a real 5–10s GIF of the chart auto-scrolling.</em></sub>
 
 </div>
 
