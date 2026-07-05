@@ -1,0 +1,2974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#ffffff"/>
+<meta name="description" content="RiffDeck — the stage-ready setlist for working musicians. Print-optimized light theme."/>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest-light.webmanifest"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="RiffDeck Light"/>
+<link rel="apple-touch-icon" href="icons/icon.svg"/>
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg"/>
+
+<title>RiffDeck — Setlist for working musicians (Light Theme)</title>
+
+<!-- Fonts: Inter for UI, JetBrains Mono for chords/code -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   RIFFDECK · PRINT-OPTIMIZED LIGHT THEME
+   Clean white version like Ultimate Guitar print sheets
+   v1.0-light — easy to read, stage-ready, print-friendly
+══════════════════════════════════════════════════════════════ */
+:root {
+  /* Surface — clean white paper */
+  --bg-0: #ffffff;
+  --bg-1: #f8f9fa;
+  --bg-2: #f0f1f3;
+  --bg-3: #e5e7eb;
+  --bg-4: #d1d5db;
+  --line: #e5e7eb;
+  --line-2: #d1d5db;
+
+  /* Text — dark slate for contrast on white */
+  --fg-0: #111827;
+  --fg-1: #1f2937;
+  --fg-2: #4b5563;
+  --fg-3: #6b7280;
+  --fg-4: #9ca3af;
+
+  /* Signature accent — bold blue (Ultimate Guitar style) */
+  --acc:    #2563eb;
+  --acc-2:  #1d4ed8;
+  --acc-3:  #111827;
+  --acc-bg: rgba(37,99,235,.08);
+  --acc-bd: rgba(37,99,235,.35);
+
+  /* Semantic */
+  --ok:   #059669;
+  --warn: #d97706;
+  --err:  #dc2626;
+
+  /* Type */
+  --font-ui:   'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Geometry */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r:    8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+
+  /* Touch */
+  --touch: 40px;
+  --touch-lg: 44px;
+  --nav-h: 56px;
+  --bottom-bar-h: 0px;
+
+  /* Shadows */
+  --sh-1: 0 1px 2px rgba(0,0,0,.08);
+  --sh-2: 0 4px 16px rgba(0,0,0,.1);
+  --sh-3: 0 12px 40px rgba(0,0,0,.15);
+
+  /* Motion */
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+body {
+  background: var(--bg-0);
+  color: var(--fg-1);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Clean white background - no patterns in light mode */
+body::before {
+  display: none;
+}
+
+button, input, textarea, select {
+  font-family: inherit; font-size: inherit; color: inherit;
+  border: none; outline: none; background: none;
+}
+button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button:disabled { cursor: not-allowed; opacity: .4; }
+
+a { color: var(--acc); text-decoration: none; }
+a:hover { color: var(--acc-2); }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg-4); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER — Light theme with clean white bar
+══════════════════════════════════════════════════════════════ */
+header {
+  height: var(--nav-h);
+  flex-shrink: 0;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 16px;
+  z-index: 30;
+  position: relative;
+}
+
+.brand-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.menu-toggle {
+  display: none;
+  width: var(--touch-lg); height: var(--touch-lg);
+  align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  color: var(--fg-1);
+  transition: background .15s var(--ease);
+  flex-direction: column; gap: 4px;
+}
+.menu-toggle:hover { background: var(--bg-2); }
+.menu-toggle span {
+  display: block; width: 16px; height: 1.5px;
+  background: currentColor; border-radius: 1px;
+  transition: transform .25s var(--ease), opacity .25s var(--ease);
+}
+.menu-toggle.open span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+.menu-toggle.open span:nth-child(2) { opacity: 0; }
+.menu-toggle.open span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+
+.brand-mark {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  color: var(--acc);
+  flex-shrink: 0;
+}
+.brand-mark svg { width: 100%; height: 100%; display: block; }
+
+.brand {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -.01em;
+  color: var(--fg-0);
+}
+.brand em { color: var(--acc); font-style: normal; font-weight: 800; }
+
+/* Setlist switcher */
+.setlist-switcher {
+  position: relative;
+  margin-left: 4px;
+}
+.setlist-switcher-btn {
+  display: flex; align-items: center; gap: 8px;
+  height: 32px;
+  padding: 0 10px 0 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--fg-1);
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.setlist-switcher-btn:hover { border-color: var(--line-2); background: var(--bg-3); }
+.setlist-switcher-btn .chev { color: var(--fg-3); flex-shrink: 0; }
+.setlist-switcher-btn .name { overflow: hidden; text-overflow: ellipsis; }
+.setlist-switcher-btn .count {
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  color: var(--fg-3);
+  background: var(--bg-3);
+  padding: 1px 6px;
+  border-radius: 100px;
+}
+
+.setlist-menu {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 280px;
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  box-shadow: var(--sh-3);
+  padding: 6px;
+  z-index: 200;
+  opacity: 0; transform: translateY(-4px); pointer-events: none;
+  transition: opacity .15s var(--ease), transform .15s var(--ease);
+}
+.setlist-menu.open { opacity: 1; transform: none; pointer-events: auto; }
+.setlist-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  font-size: .8rem;
+  color: var(--fg-1);
+  text-align: left;
+  transition: background .12s var(--ease);
+}
+.setlist-menu-item:hover { background: var(--bg-2); }
+.setlist-menu-item.active { background: var(--acc-bg); color: var(--acc-3); }
+.setlist-menu-item .check { color: var(--acc); margin-left: auto; flex-shrink: 0; }
+.setlist-menu-item .count { font-family: var(--font-mono); font-size: .7rem; color: var(--fg-3); margin-left: auto; }
+.setlist-menu-item.active .count { color: var(--acc-3); }
+.setlist-menu-divider { height: 1px; background: var(--line); margin: 4px 0; }
+.setlist-menu-action {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  font-size: .8rem;
+  color: var(--fg-2);
+  text-align: left;
+  transition: background .12s var(--ease), color .12s var(--ease);
+}
+.setlist-menu-action:hover { background: var(--bg-2); color: var(--fg-0); }
+
+/* Search */
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 360px;
+  margin-left: auto;
+}
+.search-wrap input {
+  width: 100%; height: 36px;
+  padding: 0 36px 0 36px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--fg-0);
+  font-size: 16px; /* prevents iOS zoom */
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.search-wrap input::placeholder { color: var(--fg-4); font-size: .82rem; }
+.search-wrap input:focus { border-color: var(--acc-bd); background: var(--bg-1); box-shadow: 0 0 0 3px var(--acc-bg); }
+.search-wrap .icon-search {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--fg-3); pointer-events: none;
+}
+.search-kbd {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  color: var(--fg-3);
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-xs);
+  padding: 2px 5px;
+  pointer-events: none;
+}
+
+/* Header right cluster */
+.header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--fg-2);
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+.icon-btn:hover { background: var(--bg-2); color: var(--fg-0); }
+.icon-btn.active { background: var(--acc-bg); color: var(--acc); }
+
+/* Sync pill */
+.sync-pill {
+  display: flex; align-items: center; gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 100px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  letter-spacing: .04em;
+  color: var(--fg-3);
+  flex-shrink: 0;
+}
+.sync-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--err);
+  transition: background .3s var(--ease), box-shadow .3s var(--ease);
+}
+.sync-pill.online { color: var(--fg-1); }
+.sync-pill.online .sync-dot { background: var(--ok); box-shadow: 0 0 8px rgba(16,185,129,.45); animation: pulse 2.4s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════════════════ */
+.app {
+  display: flex; flex: 1;
+  overflow: hidden; position: relative;
+  isolation: isolate;
+}
+
+/* Sidebar */
+.sidebar-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s var(--ease);
+}
+.sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+.sidebar {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg-1);
+  border-right: 1px solid var(--line-2);
+  display: flex; flex-direction: column;
+  z-index: 60;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+}
+
+.sidebar-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px 8px;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.sidebar-section-head .count {
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  color: var(--fg-4);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.song-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.song-row {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px 8px 10px;
+  border-radius: var(--r-sm);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s var(--ease);
+  min-height: var(--touch-lg);
+}
+.song-row:hover { background: var(--bg-2); }
+.song-row.active { background: var(--bg-2); }
+.song-row.active::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 2px; background: var(--acc); border-radius: 0 2px 2px 0;
+}
+.song-row.dragging { opacity: .35; }
+.song-row.drop-above { box-shadow: inset 0 2px 0 var(--acc); }
+.song-row.drop-below { box-shadow: inset 0 -2px 0 var(--acc); }
+
+.song-num {
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  color: var(--fg-4);
+  width: 22px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.song-info { flex: 1; min-width: 0; }
+.song-title {
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--fg-0);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.song-row.active .song-title { color: var(--fg-0); }
+.song-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .7rem;
+  color: var(--fg-3);
+  white-space: nowrap; overflow: hidden;
+}
+.song-meta .dot { color: var(--fg-4); }
+.song-meta .pill {
+  font-family: var(--font-mono);
+  font-size: .62rem;
+  padding: 1px 5px;
+  border-radius: var(--r-xs);
+  background: var(--bg-3);
+  color: var(--fg-2);
+}
+.song-meta .pill.key { background: var(--acc-bg); color: var(--acc-3); border: 1px solid var(--acc-bd); }
+
+.song-drag {
+  width: 16px;
+  color: var(--fg-4);
+  display: grid; place-items: center;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity .12s var(--ease);
+  flex-shrink: 0;
+}
+.song-row:hover .song-drag { opacity: 1; }
+.song-drag:active { cursor: grabbing; }
+
+/* Sidebar bottom action */
+.sidebar-bottom {
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: var(--touch);
+  padding: 0 14px;
+  background: var(--acc);
+  color: #fff;
+  border-radius: var(--r-sm);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  box-shadow: 0 1px 2px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.15);
+  transition: background .15s var(--ease), transform .08s var(--ease), box-shadow .15s var(--ease);
+}
+.btn-primary:hover { background: var(--acc-2); box-shadow: 0 4px 16px rgba(139,92,246,.3), inset 0 1px 0 rgba(255,255,255,.18); }
+.btn-primary:active { transform: scale(.98); }
+
+.btn-ghost {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: var(--touch);
+  padding: 0 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--fg-1);
+  border-radius: var(--r-sm);
+  font-size: .78rem;
+  font-weight: 500;
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.btn-ghost:hover { border-color: var(--line-2); background: var(--bg-3); }
+
+.empty-list {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--fg-3);
+  font-size: .8rem;
+  line-height: 1.6;
+}
+.empty-list strong { display: block; color: var(--fg-1); font-size: .9rem; margin-bottom: 6px; }
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN STAGE
+══════════════════════════════════════════════════════════════ */
+.stage {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: #ffffff; /* Clean white like Ultimate Guitar */
+}
+
+/* Track header */
+.track-head {
+  flex-shrink: 0;
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-0);
+}
+.track-head-top {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.track-meta-line {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--acc);
+  margin-bottom: 4px;
+}
+.track-title-display {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  letter-spacing: -.02em;
+  color: var(--fg-0);
+  line-height: 1.15;
+}
+.track-pills {
+  display: flex; align-items: center; gap: 6px;
+  flex-shrink: 0;
+}
+.track-pill {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--fg-1);
+}
+.track-pill .label {
+  font-family: var(--font-ui);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.track-pill .val { color: var(--fg-0); font-weight: 600; letter-spacing: .01em; }
+.track-pill.accent { background: var(--acc-bg); border-color: var(--acc-bd); }
+.track-pill.accent .label { color: var(--acc-3); opacity: .9; }
+.track-pill.accent .val { color: #fff; text-shadow: 0 0 12px rgba(167,139,250,.45); }
+
+/* Controls bar */
+.controls {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.controls::-webkit-scrollbar { display: none; }
+
+.ctrl {
+  display: flex; align-items: center;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  height: 36px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.ctrl-btn {
+  width: 36px; height: 100%;
+  display: grid; place-items: center;
+  color: var(--fg-2);
+  font-weight: 600;
+  font-size: .95rem;
+  transition: background .12s var(--ease), color .12s var(--ease);
+}
+.ctrl-btn:hover { background: var(--bg-3); color: var(--fg-0); }
+.ctrl-btn:active { background: var(--bg-4); }
+.ctrl-val {
+  height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 10px;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--fg-0);
+  min-width: 56px;
+  cursor: default;
+  user-select: none;
+}
+.ctrl-val.btn { cursor: pointer; transition: color .12s var(--ease); }
+.ctrl-val.btn:hover { color: var(--acc-3); }
+.ctrl-val.active { color: var(--acc); }
+
+.ctrl-label {
+  font-size: .58rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-right: 4px;
+}
+
+.tool-btn {
+  display: flex; align-items: center; gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--fg-2);
+  font-size: .74rem;
+  font-weight: 500;
+  letter-spacing: .01em;
+  transition: border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease);
+  flex-shrink: 0;
+}
+.tool-btn:hover { color: var(--fg-0); border-color: var(--line-2); }
+.tool-btn.active { background: var(--acc-bg); color: var(--acc-3); border-color: var(--acc-bd); }
+.tool-btn svg { flex-shrink: 0; }
+
+/* Visual beat dot */
+.beat-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  flex-shrink: 0;
+  transition: transform .08s var(--ease), background .08s var(--ease), box-shadow .08s var(--ease);
+}
+.beat-dot.tick { background: var(--acc); transform: scale(1.5); box-shadow: 0 0 12px rgba(139,92,246,.7); border-color: var(--acc); }
+.beat-dot.tick.accent { background: var(--acc-3); box-shadow: 0 0 18px rgba(167,139,250,.85); }
+
+/* ══════════════════════════════════════════════════════════════
+   CONTENT AREA: video panel + tab panel
+══════════════════════════════════════════════════════════════ */
+.content {
+  flex: 1; display: flex;
+  overflow: hidden;
+  min-height: 0;
+  background: #fff;
+}
+
+.video-panel {
+  width: clamp(280px, 32%, 380px);
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  background: var(--bg-1);
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: width .3s var(--ease), padding .3s var(--ease), opacity .25s var(--ease);
+  overflow: hidden;
+}
+.video-panel.hidden { width: 0; padding: 0; border-right: 0; opacity: 0; pointer-events: none; }
+.video-panel-label {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.video-wrapper {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+.tab-panel {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px 36px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  position: relative;
+  background: #fff; /* Clean white like Ultimate Guitar */
+}
+
+/* ──────────────────────────────────────────
+   Chart: chord-above-lyric (singer-friendly)
+   ────────────────────────────────────────── */
+.chart {
+  font-family: var(--font-ui);
+  font-size: clamp(1rem, 1.45vw, 1.12rem);
+  color: var(--fg-1);
+  padding-bottom: 22vh; /* breathing room past last line; auto-scroll stops here */
+  margin: 0;
+  background: #fff; /* Clean white like Ultimate Guitar */
+}
+
+/* Each line is a row of syllable groups */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin: 0 0 6px;
+  min-height: 2.6em;
+  background: #fff;
+}
+.line.empty   { min-height: 1.2em; margin-bottom: 4px; }
+.line.lyric-only {
+  display: block;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  min-height: 1.6em;
+}
+
+/* A syllable = one chord above one chunk of lyric */
+.syl {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  vertical-align: bottom;
+  white-space: pre;
+}
+.syl-chord {
+  font-family: var(--font-mono);
+  font-size: .82em;
+  font-weight: 700;
+  color: var(--fg-0); /* Dark bold like Ultimate Guitar print */
+  line-height: 1.4;
+  height: 1.4em;
+  white-space: pre;
+  letter-spacing: .01em;
+  /* No text-shadow in light mode - cleaner print */
+}
+.syl-chord:empty { content: ''; }
+/* When two chords sit on adjacent syllables of the same word ("Run|ning"),
+   nudge the chord slightly so they don't visually collide. */
+.syl + .syl > .syl-chord:not(:empty) { margin-left: .15em; }
+.syl-lyric {
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--fg-1);
+}
+
+/* Block-level section tag (whole-line section markers) — Ultimate Guitar style */
+.section {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-0); /* Dark bold text */
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 22px 0 10px;
+  border-bottom: 2px solid var(--fg-0); /* Underline like UG */
+}
+.line + .section, .section + .section { margin-top: 14px; }
+
+/* Inline section (rare — section keyword mid-line) */
+.section-inline {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-0);
+  background: transparent;
+  border-left: 2px solid var(--acc);
+  padding: 3px 0 3px 8px;
+  margin-right: 6px;
+  align-self: center;
+}
+
+/* Tighter on mobile so it stays one-line where possible */
+@media (max-width: 600px) {
+  .chart       { font-size: 1rem; }
+  .syl-chord   { font-size: .78em; }
+  .line        { min-height: 2.5em; margin-bottom: 4px; }
+  .section     { font-size: .68rem; border-bottom-width: 1.5px; margin: 16px 0 8px; }
+}
+
+/* Empty stage */
+.empty-stage {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  text-align: center;
+  padding: 40px;
+}
+.empty-mark {
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  border-radius: var(--r-lg);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--acc);
+}
+.empty-mark svg { width: 28px; height: 28px; }
+.empty-stage h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--fg-0);
+  letter-spacing: -.01em;
+}
+.empty-stage p {
+  font-size: .85rem;
+  color: var(--fg-3);
+  max-width: 320px;
+  line-height: 1.6;
+}
+.empty-stage .empty-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* ══════════════════════════════════════════════════════════════
+   AUTO-SCROLL PROGRESS BAR
+══════════════════════════════════════════════════════════════ */
+.scroll-progress {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--line);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s var(--ease);
+  z-index: 5;
+}
+.scroll-progress.active { opacity: 1; }
+.scroll-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--acc), var(--acc-3));
+  width: 0%;
+  transform-origin: 0 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+.toast-area {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 800;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 10px 16px;
+  font-size: .82rem;
+  color: var(--fg-0);
+  box-shadow: var(--sh-3);
+  animation: toastIn .2s var(--ease), toastOut .2s var(--ease) 2.6s forwards;
+  max-width: 360px;
+}
+.toast.ok { border-color: rgba(16,185,129,.4); }
+.toast.err { border-color: rgba(239,68,68,.4); }
+@keyframes toastIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(-4px); } }
+
+/* ══════════════════════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(8px);
+  z-index: 900;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s var(--ease);
+  padding: 0;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+.modal {
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh;
+  display: flex; flex-direction: column;
+  transform: translateY(20px);
+  transition: transform .25s var(--ease);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: var(--sh-3);
+}
+.modal-overlay.active .modal { transform: none; }
+.modal::before {
+  content: ''; display: block;
+  width: 32px; height: 4px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg-0);
+  letter-spacing: -.01em;
+}
+.modal-head .head-sub {
+  font-size: .72rem;
+  color: var(--fg-3);
+  margin-top: 2px;
+}
+.modal-close {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--fg-3);
+  transition: background .12s var(--ease), color .12s var(--ease);
+}
+.modal-close:hover { background: var(--bg-2); color: var(--fg-0); }
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: grid; gap: 14px;
+  grid-template-columns: 1fr 1fr;
+}
+.modal-body.single { grid-template-columns: 1fr; }
+.full { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.field input, .field textarea, .field select {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  color: var(--fg-0);
+  font-size: 16px; /* prevent iOS zoom */
+  transition: border-color .15s var(--ease), background .15s var(--ease), box-shadow .15s var(--ease);
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--acc-bd);
+  background: var(--bg-1);
+  box-shadow: 0 0 0 3px var(--acc-bg);
+}
+.field textarea {
+  min-height: 220px;
+  font-family: var(--font-mono);
+  font-size: .9rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+.field .hint {
+  font-size: .68rem;
+  color: var(--fg-4);
+}
+
+.modal-foot {
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  border-top: 1px solid var(--line);
+  background: var(--bg-1);
+  display: flex; justify-content: flex-end; gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-danger {
+  display: flex; align-items: center; gap: 6px;
+  height: var(--touch);
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid rgba(239,68,68,.3);
+  color: var(--err);
+  border-radius: var(--r-sm);
+  font-size: .76rem;
+  font-weight: 500;
+  margin-right: auto;
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+.btn-danger:hover { background: var(--err); color: #fff; border-color: var(--err); }
+
+/* ══════════════════════════════════════════════════════════════
+   SHORTCUTS CHEATSHEET
+══════════════════════════════════════════════════════════════ */
+.cheats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  padding: 4px 0;
+}
+.cheat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cheat:last-child { border-bottom: 0; }
+.cheat-label { font-size: .82rem; color: var(--fg-1); }
+.cheat-keys { display: flex; gap: 4px; }
+.kbd {
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  padding: 2px 7px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+  color: var(--fg-1);
+  min-width: 22px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SETLIST PICKER (in setlist editor modal)
+══════════════════════════════════════════════════════════════ */
+.song-picker {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg-2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+.song-picker-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background .12s var(--ease);
+}
+.song-picker-row:last-child { border-bottom: 0; }
+.song-picker-row:hover { background: var(--bg-3); }
+.song-picker-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--acc); flex-shrink: 0; }
+.song-picker-row .info { flex: 1; min-width: 0; }
+.song-picker-row .t { font-size: .82rem; color: var(--fg-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song-picker-row .a { font-size: .7rem; color: var(--fg-3); }
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  header { padding: 0 10px; gap: 8px; }
+  .menu-toggle { display: flex; }
+  .sync-pill { display: none; }
+  .search-wrap { max-width: none; }
+  .search-kbd { display: none; }
+  .setlist-switcher-btn { max-width: 140px; padding: 0 8px 0 10px; gap: 6px; }
+  .setlist-switcher-btn .count { display: none; }
+  .header-right { gap: 4px; }
+  .header-right .icon-btn { width: 34px; height: 34px; }
+
+  .sidebar {
+    position: fixed; top: var(--nav-h); left: 0;
+    height: calc(100dvh - var(--nav-h));
+    width: min(86vw, 320px);
+    transform: translateX(-100%);
+    transition: transform .28s var(--ease);
+    box-shadow: none;
+    z-index: 75;
+  }
+  .sidebar.open { transform: none; box-shadow: 12px 0 40px rgba(0,0,0,.7); }
+  .sidebar-overlay { z-index: 70; }
+
+  /* Bottom-docked controls */
+  .track-head {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+    background: rgba(10,10,18,.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--line);
+    border-bottom: none;
+    z-index: 40;
+    box-shadow: 0 -8px 32px rgba(0,0,0,.6);
+  }
+  .track-head-top { margin-bottom: 10px; gap: 10px; }
+  .track-title-display { font-size: clamp(1rem, 4vw, 1.2rem); }
+  .track-meta-line { font-size: .58rem; }
+  .ctrl-label { display: none; }
+
+  .content { flex-direction: column; }
+  .video-panel { width: 100% !important; flex-shrink: 0; border-right: 0; border-bottom: 1px solid var(--line); padding: 10px 12px; }
+  .video-panel.hidden { display: none; }
+  .tab-panel { padding: 18px 16px; }
+
+  .modal-body { grid-template-columns: 1fr; padding: 16px; }
+  .full { grid-column: 1 / -1; }
+  .modal-foot { flex-wrap: wrap; }
+  .btn-danger { margin-right: 0; width: 100%; justify-content: center; order: 3; }
+
+  .cheats { grid-template-columns: 1fr; gap: 0; }
+}
+
+@media (min-width: 901px) {
+  .modal-overlay { align-items: center; padding: 24px; }
+  .modal { border-radius: var(--r-xl); max-width: 720px; }
+  .modal::before { display: none; }
+}
+
+@media (max-width: 480px) {
+  header { padding: 0 8px; gap: 6px; }
+  .brand { display: none; }
+  .setlist-switcher-btn { max-width: 110px; font-size: .74rem; }
+  .search-wrap input { padding-left: 32px; padding-right: 10px; }
+  .icon-search { left: 10px; }
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE COACH MARK
+   One-time hint pointing at the hamburger so first-time mobile users
+   discover the song list. Hidden on desktop and after first dismissal.
+══════════════════════════════════════════════════════════════ */
+.menu-tip {
+  position: fixed;
+  top: calc(var(--nav-h) + 8px);
+  left: 10px;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  background: var(--acc);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .005em;
+  border-radius: 12px;
+  box-shadow:
+    0 10px 28px rgba(124, 58, 237, .45),
+    0 0 0 1px rgba(255, 255, 255, .08);
+  max-width: calc(100vw - 20px);
+  pointer-events: auto;
+  animation: menu-tip-bob 1.8s ease-in-out infinite;
+}
+.menu-tip.show { display: inline-flex; }
+.menu-tip-arrow {
+  position: absolute;
+  top: -5px;
+  left: 18px;
+  width: 12px; height: 12px;
+  background: var(--acc);
+  transform: rotate(45deg);
+  border-top-left-radius: 3px;
+}
+.menu-tip-text { line-height: 1.2; white-space: nowrap; }
+.menu-tip-close {
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.menu-tip-close:hover { background: rgba(255, 255, 255, .3); }
+@keyframes menu-tip-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+@media (min-width: 901px) {
+  .menu-tip { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT-ONLY HEADER (hidden on screen)
+══════════════════════════════════════════════════════════════ */
+.print-header { display: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT STYLESHEET — clean white-paper chord chart
+   Nuclear reset: strip ALL backgrounds/colors/shadows globally,
+   then re-apply minimal print typography.
+══════════════════════════════════════════════════════════════ */
+@media print {
+  @page { size: auto; margin: 16mm 14mm; }
+
+  /* ── Nuclear reset: kill every screen color/background/shadow ── */
+  *, *::before, *::after {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* ── Hide everything by default; explicitly show only the chart path ── */
+  body > * { display: none !important; }
+  body > .app { display: block !important; }
+  body > .app > .sidebar,
+  body > .app > .sidebar-overlay { display: none !important; }
+  body > .app > .stage { display: block !important; }
+  body > .app > .stage > .track-head,
+  body > .app > .stage > .content > .video-panel { display: none !important; }
+  body > .app > .stage > .content { display: block !important; }
+  body > .app > .stage > .content > .tab-panel { display: block !important; }
+
+  /* Hide remaining decorations inside the panel */
+  .empty-stage, .scroll-progress, .toast-area, .modal,
+  .footer, .icon-btn, .menu-toggle, .controls,
+  #cookie-banner { display: none !important; }
+
+  /* Reset structural containers to flow naturally on paper */
+  .app, .stage, .content, .tab-panel {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    flex: none !important;
+  }
+
+  /* ── Print header (title block) ── */
+  .print-header {
+    display: block !important;
+    border: none !important;
+    border-bottom: 0.6pt solid #000 !important;
+    padding: 0 0 3mm 0 !important;
+    margin: 0 0 6mm 0 !important;
+  }
+  .print-title {
+    font-family: Georgia, serif !important;
+    font-size: 18pt !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    margin: 0 0 1mm 0 !important;
+    padding: 0 !important;
+    letter-spacing: -0.005em;
+  }
+  .print-artist {
+    font-size: 11pt !important;
+    font-weight: 400 !important;
+    font-style: italic !important;
+    margin: 0 0 2.5mm 0 !important;
+    padding: 0 !important;
+  }
+  .print-artist:empty { display: none !important; }
+  .print-meta {
+    font-family: 'Courier New', monospace !important;
+    font-size: 9pt !important;
+    letter-spacing: 0.02em;
+  }
+  .print-meta:empty { display: none !important; }
+
+  /* ── Chart body ── */
+  .chart {
+    font-family: Georgia, serif !important;
+    font-size: 11pt !important;
+    line-height: 1.45 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Section headings: Ultimate Guitar style — uppercase bold with border-bottom */
+  .section {
+    display: block !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 10pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #000 !important;
+    background: none !important;
+    border: none !important;
+    border-bottom: 1px solid #000 !important;
+    padding: 0 0 2px 0 !important;
+    margin: 6mm 0 2mm 0 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .section-inline {
+    display: inline-block !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #000 !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 3mm 0 0 !important;
+  }
+
+  /* Lyric/chord lines */
+  .line {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin: 0 0 3pt 0 !important;
+    padding: 0 !important;
+    min-height: 0;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #fff !important;
+  }
+  .line.empty {
+    min-height: 4pt !important;
+    margin-bottom: 0 !important;
+  }
+  .line.lyric-only {
+    display: block !important;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+
+  /* Syllable groups: chord stacked above lyric chunk */
+  .syl {
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    vertical-align: bottom;
+    white-space: pre;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  .syl-chord {
+    font-family: 'Courier New', monospace !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    height: 1.2em !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    letter-spacing: 0;
+    color: #000 !important;
+  }
+  .syl-lyric {
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+
+  /* Reset h1/h2 inheritance from screen styles */
+  h1, h2, h3, h4, h5, h6 {
+    background: none !important;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+  h1, h2, h3 { page-break-after: avoid !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ HEADER ══════════════════════════════════════ -->
+<header>
+  <div class="brand-wrap">
+    <button id="menu-toggle" class="menu-toggle" aria-label="Toggle setlist sidebar" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand-mark" aria-hidden="true">
+      <!-- Fresh logo: a guitar pick with two parallel string-lines through it. "Riff" (strings) + "Deck" (pick/card) -->
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 4.5 L26.5 7 L24.5 18 Q20.5 27 16 27 Q11.5 27 7.5 18 L5.5 7 Z" fill="currentColor"/>
+        <line x1="9" y1="13" x2="23" y2="13" stroke="#0a0a0b" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="10" y1="17" x2="22" y2="17" stroke="#0a0a0b" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand">Riff<em>Deck</em></div>
+  </div>
+
+  <!-- Setlist switcher -->
+  <div class="setlist-switcher" id="setlist-switcher">
+    <button class="setlist-switcher-btn" id="setlist-switcher-btn" aria-haspopup="true" aria-expanded="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h13"/><path d="M3 12h13"/><path d="M3 18h7"/><path d="m17 14 5 3-5 3z"/></svg>
+      <span class="name" id="setlist-switcher-name">All Songs</span>
+      <span class="count" id="setlist-switcher-count">0</span>
+      <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="setlist-menu" id="setlist-menu" role="menu"></div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="icon-search" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    </span>
+    <input type="text" id="search-input" placeholder="Search songs…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search songs"/>
+    <span class="search-kbd" aria-hidden="true">/</span>
+  </div>
+
+  <div class="header-right">
+    <div class="sync-pill" id="sync-pill">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-text">CONNECTING</span>
+    </div>
+    <button class="icon-btn" id="btn-print" aria-label="Print current song" title="Print song (Ctrl+P)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-shortcuts" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01"/><path d="M10 10h.01"/><path d="M14 10h.01"/><path d="M18 10h.01"/><path d="M6 14h.01"/><path d="M18 14h.01"/><path d="M10 14h4"/></svg>
+    </button>
+    <!-- Share button intentionally hidden until the feature is fleshed out (auth, QR, role views) -->
+    <button class="icon-btn" id="btn-share" aria-label="Share setlist" title="Share setlist" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════ APP ══════════════════════════════════════ -->
+<div class="app">
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-head">
+      <span id="active-setlist-label">All Songs</span>
+      <span class="count" id="songs-count">0 songs</span>
+    </div>
+    <div class="song-list" id="song-list"></div>
+    <div class="sidebar-bottom">
+      <button class="btn-primary" id="btn-add-song">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        New song
+      </button>
+      <button class="btn-ghost" id="btn-edit-setlist">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h13"/><path d="M3 12h13"/><path d="M3 18h7"/><path d="m17 14 5 3-5 3z"/></svg>
+        Edit setlist
+      </button>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <!-- Track header -->
+    <div class="track-head" id="track-head">
+      <div class="track-head-top">
+        <div>
+          <div class="track-meta-line" id="ui-artist"></div>
+          <div class="track-title-display" id="ui-title">Welcome to RiffDeck</div>
+        </div>
+        <div class="track-pills">
+          <div class="track-pill accent" id="pill-key">
+            <span class="label">Key</span>
+            <span class="val" id="ui-key">—</span>
+          </div>
+          <div class="track-pill" id="pill-bpm">
+            <span class="label">BPM</span>
+            <span class="val" id="ui-bpm">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <!-- Transpose -->
+        <div class="ctrl" role="group" aria-label="Transpose">
+          <button class="ctrl-btn" id="btn-trans-down" aria-label="Transpose down a semitone" title="Transpose −1 (Shift+−)">−</button>
+          <span class="ctrl-val" id="ui-trans" title="Transpose offset">±0</span>
+          <button class="ctrl-btn" id="btn-trans-up" aria-label="Transpose up a semitone" title="Transpose +1 (Shift+=)">+</button>
+        </div>
+
+        <!-- Auto-scroll -->
+        <div class="ctrl" role="group" aria-label="Auto-scroll">
+          <button class="ctrl-btn" id="btn-scroll-down" aria-label="Slower auto-scroll" title="Slower (↓)">−</button>
+          <button class="ctrl-val btn" id="btn-scroll-play" aria-label="Toggle auto-scroll" title="Play/Pause auto-scroll (Space)">PLAY</button>
+          <button class="ctrl-btn" id="btn-scroll-up" aria-label="Faster auto-scroll" title="Faster (↑)">+</button>
+        </div>
+
+        <!-- Metronome -->
+        <button class="tool-btn" id="btn-metro" aria-pressed="false" title="Toggle metronome (M)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 22h16Z"/><path d="m9 16 5-7"/></svg>
+          <span>Click</span>
+        </button>
+        <span class="beat-dot" id="beat-dot" aria-hidden="true"></span>
+
+        <!-- BPM nudge -->
+        <div class="ctrl" role="group" aria-label="Adjust BPM">
+          <button class="ctrl-btn" id="btn-bpm-down" aria-label="Decrease BPM" title="Slower BPM (hold to repeat) — [">−</button>
+          <button class="ctrl-btn" id="btn-bpm-up" aria-label="Increase BPM" title="Faster BPM (hold to repeat) — ]">+</button>
+        </div>
+
+        <!-- Video -->
+        <button class="tool-btn" id="btn-video" aria-pressed="false" title="Toggle reference video (V)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/></svg>
+          <span>Video</span>
+        </button>
+
+        <!-- Edit -->
+        <button class="tool-btn" id="btn-edit" title="Edit current track (E)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <span>Edit</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="video-panel hidden" id="video-panel">
+        <div class="video-panel-label">Reference</div>
+        <div class="video-wrapper">
+          <iframe id="ui-video" src="" title="Reference track" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-panel">
+        <!-- Print-only header: hidden on screen, shown on paper -->
+        <header class="print-header" id="print-header" aria-hidden="true">
+          <h1 class="print-title" id="print-title"></h1>
+          <p class="print-artist" id="print-artist"></p>
+          <div class="print-meta" id="print-meta"></div>
+        </header>
+        <div class="empty-stage" id="empty-stage">
+          <div class="empty-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <h2>Your stage is empty</h2>
+          <p>Add your first chart to start building tonight's set. Everything stays synced across devices.</p>
+          <div class="empty-actions">
+            <button class="btn-primary" id="empty-add">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Add first song
+            </button>
+          </div>
+        </div>
+        <div class="chart" id="ui-tabs" hidden></div>
+        <div class="scroll-progress" id="scroll-progress" aria-hidden="true">
+          <div class="scroll-progress-fill" id="scroll-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- First-time mobile coach mark for the hamburger menu -->
+<div id="menu-tip" class="menu-tip" role="status" aria-live="polite">
+  <span class="menu-tip-arrow" aria-hidden="true"></span>
+  <span class="menu-tip-text">Tap here to open your songs</span>
+  <button class="menu-tip-close" id="menu-tip-close" aria-label="Dismiss tip">×</button>
+</div>
+
+<!-- Toast -->
+<div class="toast-area" id="toast-area" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ══════════════════════════════════════ EDITOR MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="editor-title">New song</h2>
+        <div class="head-sub">Wrap chord names in <code style="font-family:var(--font-mono);color:var(--acc-3)">[brackets]</code> · use <code style="font-family:var(--font-mono);color:var(--acc-3)">[Verse]</code>, <code style="font-family:var(--font-mono);color:var(--acc-3)">[Chorus]</code> for sections</div>
+      </div>
+      <button class="modal-close" id="editor-close" aria-label="Close editor">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id"/>
+      <div class="field">
+        <label for="edit-title">Title *</label>
+        <input type="text" id="edit-title" placeholder="e.g. Starlight" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label for="edit-artist">Artist</label>
+        <input type="text" id="edit-artist" placeholder="e.g. Muse" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label for="edit-key">Original key</label>
+        <input type="text" id="edit-key" placeholder="e.g. B" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label for="edit-bpm">BPM</label>
+        <input type="number" id="edit-bpm" placeholder="e.g. 122" min="20" max="300"/>
+      </div>
+      <div class="field">
+        <label for="edit-duration">Duration <span style="text-transform:none;color:var(--fg-4);font-weight:400">(mm:ss, optional)</span></label>
+        <input type="text" id="edit-duration" placeholder="e.g. 3:42" autocomplete="off" pattern="^\d{1,2}:\d{2}$"/>
+        <span class="hint">Used by smart auto-scroll to time the chart to the song.</span>
+      </div>
+      <div class="field">
+        <label for="edit-yt">YouTube ID</label>
+        <input type="text" id="edit-yt" placeholder="e.g. Pgum6OT_VH8" autocomplete="off"/>
+        <span class="hint">The part after youtube.com/watch?v=</span>
+      </div>
+      <div class="field full">
+        <label for="edit-content">Chords &amp; lyrics</label>
+        <textarea id="edit-content" placeholder="[Verse 1]&#10;[Am]Hello darkness [F]my old friend&#10;[C]I've come to [G]talk with you again"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-danger" id="editor-delete" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete
+      </button>
+      <button class="btn-ghost" id="editor-cancel">Cancel</button>
+      <button class="btn-primary" id="editor-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ SETLIST EDITOR ══════════════════════════════════════ -->
+<div class="modal-overlay" id="setlist-modal" role="dialog" aria-modal="true" aria-labelledby="setlist-title">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="setlist-title">New setlist</h2>
+        <div class="head-sub">Pick songs and reorder them by dragging in the sidebar.</div>
+      </div>
+      <button class="modal-close" id="setlist-close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body single">
+      <input type="hidden" id="setlist-id"/>
+      <div class="field">
+        <label for="setlist-name">Name *</label>
+        <input type="text" id="setlist-name" placeholder="e.g. Friday Night Acoustic" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>Songs in this setlist</label>
+        <div class="song-picker" id="setlist-picker"></div>
+        <span class="hint" id="setlist-picker-hint">0 selected</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-danger" id="setlist-delete" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        Delete setlist
+      </button>
+      <button class="btn-ghost" id="setlist-cancel">Cancel</button>
+      <button class="btn-primary" id="setlist-save">Save setlist</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ SHORTCUTS ══════════════════════════════════════ -->
+<div class="modal-overlay" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="shortcuts-title">Keyboard shortcuts</h2>
+        <div class="head-sub">Built for one-hand operation while you play.</div>
+      </div>
+      <button class="modal-close" id="shortcuts-close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body single">
+      <div class="cheats">
+        <div class="cheat"><span class="cheat-label">Auto-scroll play / pause</span><span class="cheat-keys"><kbd class="kbd">Space</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Scroll faster / slower</span><span class="cheat-keys"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Previous / next song</span><span class="cheat-keys"><kbd class="kbd">J</kbd><kbd class="kbd">K</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Transpose down / up</span><span class="cheat-keys"><kbd class="kbd">−</kbd><kbd class="kbd">=</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Reset transpose</span><span class="cheat-keys"><kbd class="kbd">0</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Toggle metronome</span><span class="cheat-keys"><kbd class="kbd">M</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Nudge BPM −/+</span><span class="cheat-keys"><kbd class="kbd">[</kbd><kbd class="kbd">]</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Toggle video</span><span class="cheat-keys"><kbd class="kbd">V</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Toggle sidebar</span><span class="cheat-keys"><kbd class="kbd">S</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">New song</span><span class="cheat-keys"><kbd class="kbd">N</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Edit current song</span><span class="cheat-keys"><kbd class="kbd">E</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Focus search</span><span class="cheat-keys"><kbd class="kbd">/</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Fullscreen</span><span class="cheat-keys"><kbd class="kbd">F</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Show shortcuts</span><span class="cheat-keys"><kbd class="kbd">?</kbd></span></div>
+        <div class="cheat"><span class="cheat-label">Close any overlay</span><span class="cheat-keys"><kbd class="kbd">Esc</kbd></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   RIFFDECK v1.0 — application logic
+   Single-file vanilla JS, Firebase-backed, offline-capable.
+   ────────────────────────────────────────────────────────────
+   Architecture
+   ────────────────────────────────────────────────────────────
+   - Firebase Realtime Database paths:
+       setlist/{songId}     → song document (legacy path kept)
+       setlists/{listId}    → named ordered subset
+   - Local persistence: localStorage (light) + Firebase (truth)
+   - Per-device prefs in localStorage under "riff.prefs"
+══════════════════════════════════════════════════════════════ */
+
+/* ── Firebase config ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyB1UDS2JIPd58H4fFVfHPJynptnsYmWN1g",
+  authDomain:        "riffdeck.firebaseapp.com",
+  databaseURL:       "https://riffdeck-default-rtdb.firebaseio.com",
+  projectId:         "riffdeck",
+  storageBucket:     "riffdeck.firebasestorage.app",
+  messagingSenderId: "806680795500",
+  appId:             "1:806680795500:web:c1469f06f0bb98876f7b49",
+  measurementId:     "G-NTG65E6M59"
+};
+
+/* ── State ── */
+const state = {
+  db: null,
+  library: [],            // all songs
+  setlists: [],           // named ordered subsets
+  activeSetlistId: 'all', // 'all' = virtual "All Songs"
+  currentSongId: null,
+  transpose: 0,           // current transpose offset for active song
+  scrollSpeed: 3,         // 1..10 fallback when no duration
+  scrolling: false,
+  metro: { playing: false, ctx: null, scheduler: null, nextBeat: 0, beat: 0 },
+  videoVisible: false,
+  prefs: loadPrefs(),     // device-local prefs
+};
+
+/* ── DOM refs (cached) ── */
+const $ = (id) => document.getElementById(id);
+const dom = {
+  syncPill: $('sync-pill'), syncDot: $('sync-dot'), syncText: $('sync-text'),
+  switcher: $('setlist-switcher'), switcherBtn: $('setlist-switcher-btn'),
+  switcherName: $('setlist-switcher-name'), switcherCount: $('setlist-switcher-count'),
+  switcherMenu: $('setlist-menu'),
+  search: $('search-input'),
+  sidebar: $('sidebar'), sidebarOverlay: $('sidebar-overlay'),
+  menuToggle: $('menu-toggle'),
+  menuTip: $('menu-tip'), menuTipClose: $('menu-tip-close'),
+  songList: $('song-list'),
+  activeSetlistLabel: $('active-setlist-label'),
+  songsCount: $('songs-count'),
+  btnAddSong: $('btn-add-song'),
+  btnEditSetlist: $('btn-edit-setlist'),
+  emptyAdd: $('empty-add'),
+  trackHead: $('track-head'),
+  uiArtist: $('ui-artist'), uiTitle: $('ui-title'),
+  uiKey: $('ui-key'), uiBpm: $('ui-bpm'),
+  uiTrans: $('ui-trans'),
+  uiTabs: $('ui-tabs'), tabPanel: $('tab-panel'), emptyStage: $('empty-stage'),
+  uiVideo: $('ui-video'), videoPanel: $('video-panel'),
+  beatDot: $('beat-dot'),
+  scrollProgress: $('scroll-progress'),
+  scrollProgressFill: $('scroll-progress-fill'),
+  btnTransUp: $('btn-trans-up'), btnTransDown: $('btn-trans-down'),
+  btnScrollUp: $('btn-scroll-up'), btnScrollDown: $('btn-scroll-down'),
+  btnScrollPlay: $('btn-scroll-play'),
+  btnMetro: $('btn-metro'),
+  btnBpmDown: $('btn-bpm-down'), btnBpmUp: $('btn-bpm-up'),
+  btnVideo: $('btn-video'), btnEdit: $('btn-edit'),
+  btnShortcuts: $('btn-shortcuts'), btnShare: $('btn-share'),
+  btnPrint: $('btn-print'),
+  printHeader: $('print-header'), printTitle: $('print-title'),
+  printArtist: $('print-artist'), printMeta: $('print-meta'),
+  /* Editor modal */
+  editorModal: $('editor-modal'), editorTitle: $('editor-title'),
+  editorClose: $('editor-close'), editorCancel: $('editor-cancel'),
+  editorSave: $('editor-save'), editorDelete: $('editor-delete'),
+  editId: $('edit-id'), editTitle: $('edit-title'), editArtist: $('edit-artist'),
+  editKey: $('edit-key'), editBpm: $('edit-bpm'), editDuration: $('edit-duration'),
+  editYt: $('edit-yt'), editContent: $('edit-content'),
+  /* Setlist modal */
+  setlistModal: $('setlist-modal'), setlistTitle: $('setlist-title'),
+  setlistClose: $('setlist-close'), setlistCancel: $('setlist-cancel'),
+  setlistSave: $('setlist-save'), setlistDelete: $('setlist-delete'),
+  setlistId: $('setlist-id'), setlistName: $('setlist-name'),
+  setlistPicker: $('setlist-picker'), setlistPickerHint: $('setlist-picker-hint'),
+  /* Shortcuts modal */
+  shortcutsModal: $('shortcuts-modal'), shortcutsClose: $('shortcuts-close'),
+  /* Toast */
+  toastArea: $('toast-area'),
+};
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════════ */
+function uid(prefix = 's') {
+  if (window.crypto && crypto.randomUUID) return prefix + '_' + crypto.randomUUID().split('-')[0];
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function parseDuration(str) {
+  if (!str) return 0;
+  const m = String(str).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return 0;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+function formatDuration(sec) {
+  if (!sec || sec <= 0) return '';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+function toast(msg, kind = '') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.textContent = msg;
+  dom.toastArea.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+function loadPrefs() {
+  try { return JSON.parse(localStorage.getItem('riff.prefs') || '{}'); }
+  catch { return {}; }
+}
+function savePrefs() {
+  try { localStorage.setItem('riff.prefs', JSON.stringify(state.prefs)); } catch {}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SYNC STATUS
+══════════════════════════════════════════════════════════════ */
+function setStatus(online, text) {
+  dom.syncPill.classList.toggle('online', !!online);
+  dom.syncText.textContent = text;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE INIT (with localStorage fallback)
+══════════════════════════════════════════════════════════════ */
+function initFirebase() {
+  try {
+    if (!firebaseConfig.apiKey) throw new Error('No API key');
+    firebase.initializeApp(firebaseConfig);
+    state.db = firebase.database();
+
+    // Songs
+    state.db.ref('setlist').on('value', (snap) => {
+      const data = snap.val();
+      // Normalize: ensure every song has a string id (legacy data used numeric Date.now())
+      state.library = data ? Object.values(data).map((s) => ({ ...s, id: String(s.id) })) : [];
+      setStatus(true, 'LIVE SYNC');
+      renderAll();
+    }, (err) => {
+      console.error('Firebase songs read error:', err);
+      setStatus(false, 'SYNC ERROR');
+      fallbackLocal();
+    });
+
+    // Setlists
+    state.db.ref('setlists').on('value', (snap) => {
+      const data = snap.val();
+      state.setlists = data ? Object.values(data).map((sl) => ({ ...sl, songIds: (sl.songIds || []).map(String) })) : [];
+      // Apply pending share-link param now that setlists are loaded
+      if (state._pendingSetlistId && state.setlists.find((s) => s.id === state._pendingSetlistId)) {
+        state.activeSetlistId = state._pendingSetlistId;
+        state._pendingSetlistId = null;
+      }
+      renderSetlistMenu();
+      renderAll();
+    });
+  } catch (err) {
+    console.error('Firebase init error:', err);
+    setStatus(false, 'OFFLINE');
+    fallbackLocal();
+  }
+}
+
+function fallbackLocal() {
+  try {
+    const lib = JSON.parse(localStorage.getItem('riff.library') || '[]');
+    state.library = Array.isArray(lib) ? lib : [];
+    const sls = JSON.parse(localStorage.getItem('riff.setlists') || '[]');
+    state.setlists = Array.isArray(sls) ? sls : [];
+  } catch {
+    state.library = [];
+    state.setlists = [];
+  }
+  renderAll();
+  renderSetlistMenu();
+}
+
+function persistLocal() {
+  try {
+    localStorage.setItem('riff.library', JSON.stringify(state.library));
+    localStorage.setItem('riff.setlists', JSON.stringify(state.setlists));
+  } catch {}
+}
+
+function saveSong(song) {
+  song.id = String(song.id);
+  if (state.db) {
+    return state.db.ref('setlist/' + song.id).set(song)
+      .then(() => toast('Saved', 'ok'))
+      .catch((e) => { console.error(e); toast('Save failed — offline?', 'err'); });
+  }
+  const idx = state.library.findIndex((s) => s.id === song.id);
+  if (idx > -1) state.library[idx] = song; else state.library.push(song);
+  persistLocal();
+  renderAll();
+  toast('Saved locally', 'ok');
+}
+
+function deleteSong(id) {
+  // Also remove from any setlists it belongs to
+  state.setlists.forEach((sl) => {
+    if (Array.isArray(sl.songIds) && sl.songIds.includes(id)) {
+      sl.songIds = sl.songIds.filter((x) => x !== id);
+      saveSetlist(sl, /*silent*/ true);
+    }
+  });
+  if (state.db) {
+    return state.db.ref('setlist/' + id).remove()
+      .then(() => toast('Track deleted'))
+      .catch(() => toast('Delete failed', 'err'));
+  }
+  state.library = state.library.filter((s) => s.id !== id);
+  persistLocal();
+  renderAll();
+  toast('Track deleted');
+}
+
+function saveSetlist(sl, silent) {
+  sl.updatedAt = Date.now();
+  if (state.db) {
+    return state.db.ref('setlists/' + sl.id).set(sl)
+      .then(() => { if (!silent) toast('Setlist saved', 'ok'); })
+      .catch(() => toast('Setlist save failed', 'err'));
+  }
+  const idx = state.setlists.findIndex((s) => s.id === sl.id);
+  if (idx > -1) state.setlists[idx] = sl; else state.setlists.push(sl);
+  persistLocal();
+  renderSetlistMenu();
+  renderAll();
+  if (!silent) toast('Setlist saved', 'ok');
+}
+
+function deleteSetlist(id) {
+  if (state.db) {
+    state.db.ref('setlists/' + id).remove();
+  }
+  state.setlists = state.setlists.filter((s) => s.id !== id);
+  if (state.activeSetlistId === id) state.activeSetlistId = 'all';
+  persistLocal();
+  renderSetlistMenu();
+  renderAll();
+  toast('Setlist deleted');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SETLIST RESOLUTION (active songs)
+══════════════════════════════════════════════════════════════ */
+function getActiveSetlist() {
+  if (state.activeSetlistId === 'all') {
+    return { id: 'all', name: 'All Songs', songIds: state.library.map((s) => s.id) };
+  }
+  return state.setlists.find((s) => s.id === state.activeSetlistId) || null;
+}
+
+function getActiveSongs() {
+  const sl = getActiveSetlist();
+  if (!sl) return [];
+  if (sl.id === 'all') {
+    // chronological by title for stable order
+    return [...state.library].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }
+  // Setlists keep custom order
+  const byId = new Map(state.library.map((s) => [s.id, s]));
+  return sl.songIds.map((id) => byId.get(id)).filter(Boolean);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SETLIST MENU (header dropdown)
+══════════════════════════════════════════════════════════════ */
+function renderSetlistMenu() {
+  const sl = getActiveSetlist();
+  dom.switcherName.textContent = sl ? sl.name : 'All Songs';
+  dom.switcherCount.textContent = sl ? sl.songIds.length : 0;
+
+  const items = [];
+  // "All Songs" virtual
+  items.push(menuItemHTML('all', 'All Songs', state.library.length, state.activeSetlistId === 'all'));
+  state.setlists.forEach((s) => {
+    items.push(menuItemHTML(s.id, s.name, (s.songIds || []).length, state.activeSetlistId === s.id));
+  });
+  const html = items.join('') +
+    '<div class="setlist-menu-divider"></div>' +
+    `<button class="setlist-menu-action" data-action="new">
+       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+       New setlist…
+     </button>` +
+    (state.activeSetlistId !== 'all'
+      ? `<button class="setlist-menu-action" data-action="edit">
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+           Edit current setlist…
+         </button>` : '');
+  dom.switcherMenu.innerHTML = html;
+
+  dom.switcherMenu.querySelectorAll('.setlist-menu-item').forEach((el) => {
+    el.addEventListener('click', () => {
+      state.activeSetlistId = el.dataset.id;
+      closeSetlistMenu();
+      renderSetlistMenu();
+      renderAll();
+      // First song in new setlist
+      const songs = getActiveSongs();
+      if (songs.length) loadSong(songs[0].id);
+      else clearStage();
+    });
+  });
+  dom.switcherMenu.querySelectorAll('.setlist-menu-action').forEach((el) => {
+    el.addEventListener('click', () => {
+      closeSetlistMenu();
+      if (el.dataset.action === 'new') openSetlistEditor(null);
+      if (el.dataset.action === 'edit') openSetlistEditor(state.activeSetlistId);
+    });
+  });
+
+  dom.activeSetlistLabel.textContent = sl ? sl.name : 'All Songs';
+  dom.btnEditSetlist.style.display = state.activeSetlistId === 'all' ? 'none' : '';
+}
+
+function menuItemHTML(id, name, count, active) {
+  return `<button class="setlist-menu-item ${active ? 'active' : ''}" data-id="${escHtml(id)}">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h13"/><path d="M3 12h13"/><path d="M3 18h7"/><path d="m17 14 5 3-5 3z"/></svg>
+    <span>${escHtml(name)}</span>
+    <span class="count">${count}</span>
+    ${active ? '<svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+  </button>`;
+}
+
+function openSetlistMenu()  { dom.switcherMenu.classList.add('open');  dom.switcherBtn.setAttribute('aria-expanded', 'true'); }
+function closeSetlistMenu() { dom.switcherMenu.classList.remove('open'); dom.switcherBtn.setAttribute('aria-expanded', 'false'); }
+dom.switcherBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dom.switcherMenu.classList.contains('open') ? closeSetlistMenu() : openSetlistMenu();
+});
+document.addEventListener('click', (e) => {
+  if (!dom.switcher.contains(e.target)) closeSetlistMenu();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR (song list)
+══════════════════════════════════════════════════════════════ */
+function renderAll() {
+  renderSongList();
+  // If current song no longer in active setlist, load first available
+  const songs = getActiveSongs();
+  if (state.currentSongId && !songs.find((s) => s.id === state.currentSongId)) {
+    if (songs.length) loadSong(songs[0].id);
+    else clearStage();
+  } else if (!state.currentSongId && songs.length) {
+    loadSong(songs[0].id);
+  }
+}
+
+function renderSongList(filter = '') {
+  const songs = getActiveSongs();
+  const q = filter.toLowerCase().trim();
+  const visible = q
+    ? songs.filter((s) => (s.title || '').toLowerCase().includes(q) || (s.artist || '').toLowerCase().includes(q))
+    : songs;
+
+  dom.songsCount.textContent = `${songs.length} song${songs.length === 1 ? '' : 's'}`;
+
+  if (!visible.length) {
+    dom.songList.innerHTML = `<div class="empty-list">
+      <strong>${songs.length === 0 ? 'No songs yet' : 'No matches'}</strong>
+      ${songs.length === 0 ? 'Click "New song" to add your first chart.' : 'Try a different search term.'}
+    </div>`;
+    return;
+  }
+
+  const isCustom = state.activeSetlistId !== 'all';
+  dom.songList.innerHTML = '';
+  visible.forEach((song, i) => {
+    const row = document.createElement('div');
+    row.className = 'song-row' + (state.currentSongId === song.id ? ' active' : '');
+    row.dataset.id = song.id;
+    if (isCustom && !q) row.draggable = true;
+    row.innerHTML = `
+      <span class="song-num">${String(i + 1).padStart(2, '0')}</span>
+      <div class="song-info">
+        <div class="song-title">${escHtml(song.title || 'Untitled')}</div>
+        <div class="song-meta">
+          ${song.artist ? `<span>${escHtml(song.artist)}</span>` : ''}
+          ${song.artist && (song.key || song.bpm) ? '<span class="dot">·</span>' : ''}
+          ${song.key ? `<span class="pill key">${escHtml(song.key)}</span>` : ''}
+          ${song.bpm ? `<span class="pill">${escHtml(song.bpm)} bpm</span>` : ''}
+        </div>
+      </div>
+      ${isCustom && !q ? '<span class="song-drag" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>' : ''}
+    `;
+    row.addEventListener('click', () => {
+      loadSong(song.id);
+      if (window.innerWidth <= 900) closeSidebar();
+    });
+    if (isCustom && !q) wireDrag(row);
+    dom.songList.appendChild(row);
+  });
+}
+
+/* Drag-reorder within a custom setlist */
+function wireDrag(row) {
+  row.addEventListener('dragstart', (e) => {
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', row.dataset.id);
+  });
+  row.addEventListener('dragend', () => {
+    row.classList.remove('dragging');
+    document.querySelectorAll('.song-row').forEach((r) => r.classList.remove('drop-above', 'drop-below'));
+  });
+  row.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const r = row.getBoundingClientRect();
+    const above = (e.clientY - r.top) < r.height / 2;
+    row.classList.toggle('drop-above', above);
+    row.classList.toggle('drop-below', !above);
+  });
+  row.addEventListener('dragleave', () => {
+    row.classList.remove('drop-above', 'drop-below');
+  });
+  row.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if (!draggedId || draggedId === row.dataset.id) return;
+    const r = row.getBoundingClientRect();
+    const above = (e.clientY - r.top) < r.height / 2;
+    reorderInSetlist(draggedId, row.dataset.id, above);
+  });
+}
+
+function reorderInSetlist(draggedId, targetId, putAbove) {
+  const sl = getActiveSetlist();
+  if (!sl || sl.id === 'all') return;
+  const live = state.setlists.find((s) => s.id === sl.id);
+  if (!live) return;
+  const ids = [...(live.songIds || [])];
+  const fromIdx = ids.indexOf(draggedId);
+  if (fromIdx < 0) return;
+  ids.splice(fromIdx, 1);
+  let toIdx = ids.indexOf(targetId);
+  if (toIdx < 0) toIdx = ids.length;
+  if (!putAbove) toIdx += 1;
+  ids.splice(toIdx, 0, draggedId);
+  live.songIds = ids;
+  saveSetlist(live, /*silent*/ true);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STAGE / TRACK LOADING
+══════════════════════════════════════════════════════════════ */
+function loadSong(id) {
+  const song = state.library.find((s) => s.id === id);
+  if (!song) { clearStage(); return; }
+  state.currentSongId = id;
+  state.transpose = (state.prefs.transpose && state.prefs.transpose[id]) || 0;
+  stopScroll();
+
+  dom.uiArtist.textContent = song.artist || '';
+  dom.uiTitle.textContent  = song.title || 'Untitled';
+  dom.uiBpm.textContent    = song.bpm || '—';
+
+  // Per-song scroll speed memory
+  state.scrollSpeed = (state.prefs.scrollSpeed && state.prefs.scrollSpeed[id]) || 3;
+
+  // Video panel
+  if (state.videoVisible && song.youtube_id) {
+    dom.uiVideo.src = `https://www.youtube.com/embed/${song.youtube_id}`;
+  } else {
+    dom.uiVideo.src = '';
+  }
+
+  renderTabs();
+  renderSongList(dom.search.value);
+  if (state.metro.playing) { stopMetronome(); startMetronome(); }
+  requestAnimationFrame(updateBottomPadding);
+  // Reset scroll
+  dom.tabPanel.scrollTop = 0;
+}
+
+function clearStage() {
+  state.currentSongId = null;
+  dom.uiArtist.textContent = '';
+  dom.uiTitle.textContent  = 'Welcome to RiffDeck';
+  dom.uiKey.textContent    = '—';
+  dom.uiBpm.textContent    = '—';
+  dom.uiTrans.textContent  = '±0';
+  dom.uiVideo.src = '';
+  dom.uiTabs.hidden = true;
+  dom.emptyStage.style.display = 'flex';
+}
+
+function currentSong() {
+  return state.library.find((s) => s.id === state.currentSongId) || null;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TRANSPOSE + CHORD RENDERING
+══════════════════════════════════════════════════════════════ */
+const NOTES = ['C','C#','D','Eb','E','F','F#','G','G#','A','Bb','B'];
+const NOTE_MAP = {
+  'C':0,'C#':1,'DB':1,'D':2,'D#':3,'EB':3,'E':4,
+  'F':5,'F#':6,'GB':6,'G':7,'G#':8,'AB':8,'A':9,'A#':10,'BB':10,'B':11
+};
+const SECTION_KEYWORDS = ['intro','verse','chorus','pre-chorus','pre chorus','bridge','solo','outro','instrumental','interlude','refrain','tag','break','hook'];
+
+function transposeNote(note, steps) {
+  if (!note) return '';
+  const idx = NOTE_MAP[note.toUpperCase()];
+  if (idx === undefined) return note;
+  let n = (idx + steps) % 12;
+  if (n < 0) n += 12;
+  return NOTES[n];
+}
+function transposeChord(chord, steps) {
+  if (!steps) return chord;
+  const m = chord.match(/^([A-G][#b]?)(.*)$/i);
+  if (!m) return chord;
+  let root = transposeNote(m[1], steps);
+  let mod = m[2] || '';
+  if (mod.includes('/')) {
+    const [pre, post] = mod.split('/');
+    mod = pre + '/' + transposeNote(post, steps);
+  }
+  return root + mod;
+}
+
+function isSectionTag(text) {
+  const t = text.toLowerCase();
+  return SECTION_KEYWORDS.some((s) => t.includes(s));
+}
+
+/**
+ * Tokenize a single line of ChordPro into syllable groups.
+ * A "syllable" is a (chord, lyric) pair where the chord (if any) sits above
+ * its lyric chunk. Word boundaries are split into separate tokens so that
+ * long lines wrap at word boundaries (not mid-word).
+ */
+function tokenizeLine(line) {
+  const tokens = [];
+  let currentChord = '';
+  let buffer = '';
+  let i = 0;
+
+  const flush = () => {
+    if (buffer || currentChord) {
+      tokens.push({ chord: currentChord, lyric: buffer });
+      currentChord = '';
+      buffer = '';
+    }
+  };
+
+  while (i < line.length) {
+    const ch = line[i];
+    if (ch === '[') {
+      flush();
+      const close = line.indexOf(']', i);
+      if (close === -1) { buffer += line.slice(i); break; }
+      currentChord = line.slice(i + 1, close);
+      i = close + 1;
+    } else if (ch === ' ') {
+      buffer += ch;
+      flush();
+      i++;
+    } else {
+      buffer += ch;
+      i++;
+    }
+  }
+  flush();
+  return tokens;
+}
+
+function renderChartLine(line) {
+  // Empty line
+  if (!line.trim()) return '<div class="line empty"></div>';
+
+  // Whole-line section tag, e.g. "[Chorus]" or "[Verse 1]"
+  const m = line.trim().match(/^\[([^\]]+)\]$/);
+  if (m && isSectionTag(m[1])) {
+    return `<div class="section">${escHtml(m[1])}</div>`;
+  }
+
+  const tokens = tokenizeLine(line);
+  const hasChord = tokens.some((t) => t.chord);
+
+  // No chords on this line — render as plain lyric (no wasted chord row)
+  if (!hasChord) {
+    return `<div class="line lyric-only">${escHtml(line)}</div>`;
+  }
+
+  let html = '<div class="line">';
+  for (const t of tokens) {
+    if (t.chord && isSectionTag(t.chord)) {
+      html += `<span class="section-inline">${escHtml(t.chord)}</span>`;
+      if (t.lyric) {
+        html += `<span class="syl"><span class="syl-chord"></span><span class="syl-lyric">${escHtml(t.lyric)}</span></span>`;
+      }
+      continue;
+    }
+    const chord = t.chord ? transposeChord(t.chord, state.transpose) : '';
+    html += `<span class="syl"><span class="syl-chord">${escHtml(chord)}</span><span class="syl-lyric">${escHtml(t.lyric || ' ')}</span></span>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderTabs() {
+  const song = currentSong();
+  if (!song) return;
+
+  dom.emptyStage.style.display = 'none';
+  dom.uiTabs.hidden = false;
+
+  const lines = (song.content || '').split('\n');
+  dom.uiTabs.innerHTML = lines.map(renderChartLine).join('');
+
+  // Key display with offset hint
+  const keyMatch = (song.key || '').match(/^([A-G][#b]?)(.*)$/i);
+  if (keyMatch) {
+    const tKey = transposeChord(keyMatch[1], state.transpose) + keyMatch[2];
+    dom.uiKey.textContent = tKey;
+  } else {
+    dom.uiKey.textContent = song.key || '—';
+  }
+  const sign = state.transpose > 0 ? `+${state.transpose}` : (state.transpose < 0 ? `${state.transpose}` : '±0');
+  dom.uiTrans.textContent = sign;
+  dom.uiTrans.classList.toggle('active', state.transpose !== 0);
+
+  // Populate the print-only header
+  dom.printTitle.textContent  = song.title || 'Untitled';
+  dom.printArtist.textContent = song.artist || '';
+  const metaParts = [];
+  if (song.key)      metaParts.push(`Key: ${dom.uiKey.textContent}`);
+  if (song.bpm)      metaParts.push(`BPM: ${song.bpm}`);
+  if (song.duration) metaParts.push(`Duration: ${song.duration}`);
+  if (state.transpose) metaParts.push(`Capo/Transpose: ${sign}`);
+  dom.printMeta.textContent = metaParts.join('  ·  ');
+}
+
+function setTranspose(n) {
+  state.transpose = Math.max(-12, Math.min(12, n));
+  if (state.currentSongId) {
+    state.prefs.transpose = state.prefs.transpose || {};
+    state.prefs.transpose[state.currentSongId] = state.transpose;
+    savePrefs();
+  }
+  renderTabs();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   METRONOME — Web Audio scheduler (no drift)
+══════════════════════════════════════════════════════════════ */
+function getAudioCtx() {
+  if (!state.metro.ctx) {
+    try { state.metro.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch { return null; }
+  }
+  if (state.metro.ctx.state === 'suspended') state.metro.ctx.resume();
+  return state.metro.ctx;
+}
+
+function scheduleClick(time, accent) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.frequency.value = accent ? 1400 : 880;
+  gain.gain.setValueAtTime(accent ? 0.32 : 0.18, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.045);
+  osc.start(time); osc.stop(time + 0.06);
+}
+
+function startMetronome() {
+  const song = currentSong();
+  const bpm = (song && +song.bpm > 0) ? +song.bpm : 120;
+  const beatSec = 60 / bpm;
+  const ctx = getAudioCtx();
+
+  state.metro.playing = true;
+  dom.btnMetro.classList.add('active');
+  dom.btnMetro.setAttribute('aria-pressed', 'true');
+
+  if (!ctx) {
+    // Fallback (older browsers)
+    state.metro.scheduler = setInterval(() => {
+      const accent = state.metro.beat % 4 === 0;
+      dom.beatDot.classList.add('tick');
+      if (accent) dom.beatDot.classList.add('accent');
+      setTimeout(() => dom.beatDot.classList.remove('tick', 'accent'), 90);
+      state.metro.beat++;
+    }, beatSec * 1000);
+    return;
+  }
+
+  state.metro.nextBeat = ctx.currentTime + 0.05;
+  state.metro.beat = 0;
+
+  function tick() {
+    while (state.metro.nextBeat < ctx.currentTime + 0.1) {
+      const accent = state.metro.beat % 4 === 0;
+      scheduleClick(state.metro.nextBeat, accent);
+      const delay = (state.metro.nextBeat - ctx.currentTime) * 1000;
+      setTimeout(() => {
+        dom.beatDot.classList.add('tick');
+        if (accent) dom.beatDot.classList.add('accent');
+        setTimeout(() => dom.beatDot.classList.remove('tick', 'accent'), 90);
+      }, Math.max(0, delay));
+      state.metro.nextBeat += beatSec;
+      state.metro.beat++;
+    }
+  }
+  tick();
+  state.metro.scheduler = setInterval(tick, 25);
+}
+
+function stopMetronome() {
+  state.metro.playing = false;
+  dom.btnMetro.classList.remove('active');
+  dom.btnMetro.setAttribute('aria-pressed', 'false');
+  clearInterval(state.metro.scheduler);
+  state.metro.scheduler = null;
+  dom.beatDot.classList.remove('tick', 'accent');
+}
+
+function toggleMetronome() {
+  state.metro.playing ? stopMetronome() : startMetronome();
+}
+dom.btnMetro.addEventListener('click', toggleMetronome);
+
+/* ══════════════════════════════════════════════════════════════
+   BPM NUDGE — quick tempo adjust (replaces tap-tempo)
+   Click  = ±1 BPM
+   Hold   = auto-repeat ±1 every 80ms (after 400ms hold)
+══════════════════════════════════════════════════════════════ */
+function nudgeBpm(delta) {
+  const song = currentSong();
+  if (!song) { toast('Open a song first'); return; }
+  const cur = +song.bpm > 0 ? +song.bpm : 120;
+  const next = Math.max(20, Math.min(300, cur + delta));
+  if (next === cur) return;
+  song.bpm = next;
+  dom.uiBpm.textContent = next;
+  saveSong(song);
+  if (state.metro.playing) { stopMetronome(); startMetronome(); }
+}
+
+function bindBpmHold(btn, delta) {
+  let holdTimer = null;
+  let repeatTimer = null;
+  const stop = () => {
+    if (holdTimer)   { clearTimeout(holdTimer);  holdTimer = null; }
+    if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
+  };
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    btn.setPointerCapture?.(e.pointerId);
+    nudgeBpm(delta);
+    holdTimer = setTimeout(() => {
+      repeatTimer = setInterval(() => nudgeBpm(delta), 80);
+    }, 400);
+  });
+  btn.addEventListener('pointerup', stop);
+  btn.addEventListener('pointerleave', stop);
+  btn.addEventListener('pointercancel', stop);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+bindBpmHold(dom.btnBpmDown, -1);
+bindBpmHold(dom.btnBpmUp,   +1);
+
+/* ══════════════════════════════════════════════════════════════
+   AUTO-SCROLL (constant pixel-rate, rAF-driven)
+══════════════════════════════════════════════════════════════ */
+let scrollRaf = null;
+
+/**
+ * Auto-scroll: dead-simple constant-rate scrolling, modeled on the legacy
+ * `setInterval` approach but using rAF for smoothness and frame-time delta
+ * so the rate stays consistent regardless of refresh rate.
+ *
+ * No duration logic, no easing, no auto-stop, no pause-on-touch. The user
+ * presses STOP (or hits Space) when they're done. Predictable and bulletproof.
+ */
+let scrollLastT = 0;
+
+function startScroll() {
+  const panel = dom.tabPanel;
+  if (panel.scrollHeight - panel.clientHeight <= 4) {
+    toast('Chart fits the screen — nothing to scroll');
+    return;
+  }
+
+  state.scrolling = true;
+  scrollLastT = 0;
+  dom.btnScrollPlay.textContent = 'STOP';
+  dom.btnScrollPlay.classList.add('active');
+  dom.scrollProgress.classList.add('active');
+
+  function step(now) {
+    if (!state.scrolling) return;
+    if (scrollLastT) {
+      const dt = now - scrollLastT;
+      // scrollSpeed 1..10 → 25..250 px/sec (legacy was ~50 px/sec at speed 2)
+      const pxPerSec = state.scrollSpeed * 25;
+      panel.scrollTop += pxPerSec * dt / 1000;
+    }
+    scrollLastT = now;
+    const total = panel.scrollHeight - panel.clientHeight;
+    if (total > 0) {
+      const pct = Math.min(100, (panel.scrollTop / total) * 100);
+      dom.scrollProgressFill.style.width = pct + '%';
+    }
+    scrollRaf = requestAnimationFrame(step);
+  }
+  scrollRaf = requestAnimationFrame(step);
+}
+
+function stopScroll() {
+  state.scrolling = false;
+  if (scrollRaf) cancelAnimationFrame(scrollRaf);
+  scrollRaf = null;
+  scrollLastT = 0;
+  dom.btnScrollPlay.textContent = 'PLAY';
+  dom.btnScrollPlay.classList.remove('active');
+  dom.scrollProgress.classList.remove('active');
+}
+
+function toggleScroll() {
+  state.scrolling ? stopScroll() : startScroll();
+}
+dom.btnScrollPlay.addEventListener('click', toggleScroll);
+
+function bumpScroll(delta) {
+  state.scrollSpeed = Math.max(1, Math.min(10, state.scrollSpeed + delta));
+  if (state.currentSongId) {
+    state.prefs.scrollSpeed = state.prefs.scrollSpeed || {};
+    state.prefs.scrollSpeed[state.currentSongId] = state.scrollSpeed;
+    savePrefs();
+  }
+  toast(`Scroll speed: ${state.scrollSpeed}/10`);
+  // Speed change takes effect on next frame automatically — no restart needed.
+}
+dom.btnScrollUp.addEventListener('click', () => bumpScroll(+1));
+dom.btnScrollDown.addEventListener('click', () => bumpScroll(-1));
+
+/* ══════════════════════════════════════════════════════════════
+   TRANSPOSE BUTTONS
+══════════════════════════════════════════════════════════════ */
+dom.btnTransUp.addEventListener('click', () => setTranspose(state.transpose + 1));
+dom.btnTransDown.addEventListener('click', () => setTranspose(state.transpose - 1));
+dom.uiTrans.addEventListener('click', () => setTranspose(0)); // click value to reset
+
+/* ══════════════════════════════════════════════════════════════
+   VIDEO PANEL TOGGLE
+══════════════════════════════════════════════════════════════ */
+function toggleVideo() {
+  state.videoVisible = !state.videoVisible;
+  dom.videoPanel.classList.toggle('hidden', !state.videoVisible);
+  dom.btnVideo.classList.toggle('active', state.videoVisible);
+  dom.btnVideo.setAttribute('aria-pressed', String(state.videoVisible));
+  const song = currentSong();
+  if (state.videoVisible && song && song.youtube_id) {
+    dom.uiVideo.src = `https://www.youtube.com/embed/${song.youtube_id}`;
+  } else {
+    dom.uiVideo.src = '';
+  }
+  requestAnimationFrame(updateBottomPadding);
+}
+dom.btnVideo.addEventListener('click', toggleVideo);
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR (mobile slide-in)
+══════════════════════════════════════════════════════════════ */
+function openSidebar()  {
+  dom.sidebar.classList.add('open');
+  dom.sidebarOverlay.classList.add('active');
+  dom.menuToggle.classList.add('open');
+  dom.menuToggle.setAttribute('aria-expanded', 'true');
+  dismissMenuTip(true); // user found it — don't show again
+}
+function closeSidebar() {
+  dom.sidebar.classList.remove('open');
+  dom.sidebarOverlay.classList.remove('active');
+  dom.menuToggle.classList.remove('open');
+  dom.menuToggle.setAttribute('aria-expanded', 'false');
+}
+function toggleSidebar() { dom.sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); }
+dom.menuToggle.addEventListener('click', toggleSidebar);
+dom.sidebarOverlay.addEventListener('click', closeSidebar);
+
+/* ══════════════════════════════════════════════════════════════
+   FIRST-TIME COACH MARK (mobile only)
+   Tells new mobile users the song list lives behind the hamburger.
+   Auto-dismisses permanently on first menu open or close-button tap.
+   Soft-dismisses (no persistence) after 8s so it'll re-appear next visit
+   until the user actually opens the menu.
+══════════════════════════════════════════════════════════════ */
+function dismissMenuTip(persist) {
+  if (!dom.menuTip.classList.contains('show')) return;
+  dom.menuTip.classList.remove('show');
+  if (persist) {
+    state.prefs.menuTipShown = true;
+    savePrefs();
+  }
+}
+function maybeShowMenuTip() {
+  if (state.prefs.menuTipShown) return;
+  if (window.innerWidth > 900) return;
+  if (dom.sidebar.classList.contains('open')) return;
+  dom.menuTip.classList.add('show');
+  setTimeout(() => dismissMenuTip(false), 8000);
+}
+dom.menuTipClose.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dismissMenuTip(true);
+});
+dom.menuTip.addEventListener('click', (e) => {
+  if (e.target === dom.menuTipClose) return;
+  dismissMenuTip(true);
+  openSidebar();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SEARCH
+══════════════════════════════════════════════════════════════ */
+dom.search.addEventListener('input', () => renderSongList(dom.search.value));
+
+/* ══════════════════════════════════════════════════════════════
+   SONG EDITOR MODAL
+══════════════════════════════════════════════════════════════ */
+function openSongEditor(id) {
+  const editing = !!id;
+  const song = editing ? state.library.find((s) => s.id === id) : null;
+  dom.editorTitle.textContent = editing ? 'Edit song' : 'New song';
+  dom.editorDelete.hidden = !editing;
+
+  dom.editId.value       = song ? song.id : '';
+  dom.editTitle.value    = song ? (song.title || '') : '';
+  dom.editArtist.value   = song ? (song.artist || '') : '';
+  dom.editKey.value      = song ? (song.key || '') : '';
+  dom.editBpm.value      = song ? (song.bpm || '') : '';
+  dom.editDuration.value = song ? (song.duration || '') : '';
+  dom.editYt.value       = song ? (song.youtube_id || '') : '';
+  dom.editContent.value  = song ? (song.content || '') : '';
+
+  showModal(dom.editorModal);
+  setTimeout(() => dom.editTitle.focus(), 250);
+}
+function closeSongEditor() { hideModal(dom.editorModal); }
+
+dom.btnAddSong.addEventListener('click', () => { openSongEditor(null); closeSidebar(); });
+dom.emptyAdd.addEventListener('click', () => openSongEditor(null));
+dom.btnEdit.addEventListener('click', () => {
+  if (!state.currentSongId) { toast('Select a song to edit'); return; }
+  openSongEditor(state.currentSongId);
+});
+dom.editorClose.addEventListener('click', closeSongEditor);
+dom.editorCancel.addEventListener('click', closeSongEditor);
+dom.editorModal.addEventListener('click', (e) => { if (e.target === dom.editorModal) closeSongEditor(); });
+
+dom.editorSave.addEventListener('click', () => {
+  const title = dom.editTitle.value.trim();
+  if (!title) { toast('Song title is required', 'err'); dom.editTitle.focus(); return; }
+  const id = dom.editId.value || uid('s');
+  const song = {
+    id,
+    title,
+    artist:     dom.editArtist.value.trim(),
+    key:        dom.editKey.value.trim(),
+    bpm:        parseInt(dom.editBpm.value, 10) || 0,
+    duration:   dom.editDuration.value.trim(),
+    youtube_id: dom.editYt.value.trim(),
+    content:    dom.editContent.value,
+    updatedAt:  Date.now(),
+  };
+  saveSong(song);
+  closeSongEditor();
+  // Auto-add to current setlist if not "all"
+  if (state.activeSetlistId !== 'all') {
+    const sl = state.setlists.find((s) => s.id === state.activeSetlistId);
+    if (sl && !(sl.songIds || []).includes(id)) {
+      sl.songIds = [...(sl.songIds || []), id];
+      saveSetlist(sl, true);
+    }
+  }
+  state.currentSongId = id;
+  // Wait a tick for state.library to be updated by Firebase (or local save)
+  setTimeout(() => loadSong(id), 50);
+});
+
+dom.editorDelete.addEventListener('click', () => {
+  const id = dom.editId.value;
+  if (!id) return;
+  if (!confirm('Delete this track from your library?')) return;
+  deleteSong(id);
+  closeSongEditor();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SETLIST EDITOR MODAL
+══════════════════════════════════════════════════════════════ */
+function openSetlistEditor(id) {
+  const editing = !!id && id !== 'all';
+  const sl = editing ? state.setlists.find((s) => s.id === id) : null;
+  dom.setlistTitle.textContent = editing ? 'Edit setlist' : 'New setlist';
+  dom.setlistDelete.hidden = !editing;
+  dom.setlistId.value   = sl ? sl.id : '';
+  dom.setlistName.value = sl ? sl.name : '';
+
+  // Render song picker
+  const selected = new Set(sl ? (sl.songIds || []) : []);
+  dom.setlistPicker.innerHTML = '';
+  if (state.library.length === 0) {
+    dom.setlistPicker.innerHTML = '<div class="empty-list"><strong>No songs yet</strong>Add some songs first, then build a setlist from them.</div>';
+  } else {
+    [...state.library].sort((a, b) => (a.title || '').localeCompare(b.title || '')).forEach((s) => {
+      const row = document.createElement('label');
+      row.className = 'song-picker-row';
+      row.innerHTML = `
+        <input type="checkbox" data-id="${escHtml(s.id)}" ${selected.has(s.id) ? 'checked' : ''}/>
+        <div class="info">
+          <div class="t">${escHtml(s.title || 'Untitled')}</div>
+          <div class="a">${escHtml(s.artist || '')}</div>
+        </div>
+      `;
+      const cb = row.querySelector('input');
+      cb.addEventListener('change', () => {
+        if (cb.checked) selected.add(cb.dataset.id);
+        else selected.delete(cb.dataset.id);
+        dom.setlistPickerHint.textContent = `${selected.size} selected`;
+      });
+      dom.setlistPicker.appendChild(row);
+    });
+  }
+  dom.setlistPickerHint.textContent = `${selected.size} selected`;
+  dom._selectedSongs = selected;
+
+  showModal(dom.setlistModal);
+  setTimeout(() => dom.setlistName.focus(), 250);
+}
+
+function closeSetlistEditor() { hideModal(dom.setlistModal); }
+dom.btnEditSetlist.addEventListener('click', () => openSetlistEditor(state.activeSetlistId));
+dom.setlistClose.addEventListener('click', closeSetlistEditor);
+dom.setlistCancel.addEventListener('click', closeSetlistEditor);
+dom.setlistModal.addEventListener('click', (e) => { if (e.target === dom.setlistModal) closeSetlistEditor(); });
+
+dom.setlistSave.addEventListener('click', () => {
+  const name = dom.setlistName.value.trim();
+  if (!name) { toast('Setlist needs a name', 'err'); dom.setlistName.focus(); return; }
+  const id = dom.setlistId.value || uid('sl');
+  const existing = state.setlists.find((s) => s.id === id);
+  // Preserve order for already-included songs; append newly-added in selection order
+  const currentOrder = existing ? [...(existing.songIds || [])] : [];
+  const selected = dom._selectedSongs || new Set();
+  const newOrder = currentOrder.filter((sid) => selected.has(sid));
+  selected.forEach((sid) => { if (!newOrder.includes(sid)) newOrder.push(sid); });
+
+  const sl = { id, name, songIds: newOrder, updatedAt: Date.now() };
+  saveSetlist(sl);
+  state.activeSetlistId = id;
+  closeSetlistEditor();
+  renderSetlistMenu();
+  renderAll();
+});
+
+dom.setlistDelete.addEventListener('click', () => {
+  const id = dom.setlistId.value;
+  if (!id || id === 'all') return;
+  if (!confirm('Delete this setlist? Songs in your library are not affected.')) return;
+  deleteSetlist(id);
+  closeSetlistEditor();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SHORTCUTS MODAL
+══════════════════════════════════════════════════════════════ */
+function openShortcuts()  { showModal(dom.shortcutsModal); }
+function closeShortcuts() { hideModal(dom.shortcutsModal); }
+dom.btnShortcuts.addEventListener('click', openShortcuts);
+dom.shortcutsClose.addEventListener('click', closeShortcuts);
+dom.shortcutsModal.addEventListener('click', (e) => { if (e.target === dom.shortcutsModal) closeShortcuts(); });
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT — Ultimate-Guitar-style white paper, black text
+══════════════════════════════════════════════════════════════ */
+function printSong() {
+  if (!currentSong()) {
+    toast('Open a song first');
+    return;
+  }
+  // Stop auto-scroll & metronome before printing so they don't keep firing
+  if (state.scrolling) stopScroll();
+  // Re-render to make sure print-header is in sync with current transpose
+  renderTabs();
+  // One-time tip about disabling the browser's auto-injected header/footer
+  if (!localStorage.getItem('riffPrintTipShown')) {
+    toast('Tip: in the print dialog, uncheck "Headers and footers" for a cleaner page');
+    localStorage.setItem('riffPrintTipShown', '1');
+  }
+  // Brief delay so the browser commits any pending layout before opening the dialog
+  setTimeout(() => window.print(), 50);
+}
+dom.btnPrint.addEventListener('click', printSong);
+
+/* Generic modal helpers */
+function showModal(el) { el.classList.add('active'); }
+function hideModal(el) { el.classList.remove('active'); }
+
+/* ══════════════════════════════════════════════════════════════
+   SHARE LINK
+══════════════════════════════════════════════════════════════ */
+dom.btnShare.addEventListener('click', async () => {
+  const sl = getActiveSetlist();
+  if (!sl) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('s', sl.id);
+  const link = url.toString();
+  try {
+    await navigator.clipboard.writeText(link);
+    toast('Setlist link copied to clipboard', 'ok');
+  } catch {
+    prompt('Copy this link:', link);
+  }
+});
+
+function applyShareLinkOnLoad() {
+  const params = new URLSearchParams(window.location.search);
+  const sid = params.get('s');
+  if (!sid) return;
+  if (sid === 'all') {
+    state.activeSetlistId = 'all';
+  } else {
+    // Defer: setlists may not be loaded yet from Firebase. Stash, apply after load.
+    state._pendingSetlistId = sid;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+══════════════════════════════════════════════════════════════ */
+function onKey(e) {
+  // Ignore when typing in form fields
+  const tag = (e.target && e.target.tagName) || '';
+  const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable);
+
+  // Always handle Escape
+  if (e.key === 'Escape') {
+    if (dom.editorModal.classList.contains('active')) return closeSongEditor();
+    if (dom.setlistModal.classList.contains('active')) return closeSetlistEditor();
+    if (dom.shortcutsModal.classList.contains('active')) return closeShortcuts();
+    if (dom.switcherMenu.classList.contains('open')) return closeSetlistMenu();
+    if (dom.sidebar.classList.contains('open')) return closeSidebar();
+    return;
+  }
+
+  if (inField) return;
+
+  // ? — show shortcuts
+  if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); openShortcuts(); return; }
+  // / — focus search
+  if (e.key === '/') { e.preventDefault(); dom.search.focus(); dom.search.select(); return; }
+
+  switch (e.key.toLowerCase()) {
+    case ' ':
+    case 'spacebar':
+      e.preventDefault(); toggleScroll(); break;
+    case 'arrowup':    e.preventDefault(); bumpScroll(+1); break;
+    case 'arrowdown':  e.preventDefault(); bumpScroll(-1); break;
+    case 'j':          e.preventDefault(); navigateSong(-1); break;
+    case 'k':          e.preventDefault(); navigateSong(+1); break;
+    case 'arrowleft':  e.preventDefault(); navigateSong(-1); break;
+    case 'arrowright': e.preventDefault(); navigateSong(+1); break;
+    case 'm':          toggleMetronome(); break;
+    case '[':          e.preventDefault(); nudgeBpm(-1); break;
+    case ']':          e.preventDefault(); nudgeBpm(+1); break;
+    case 'v':          toggleVideo(); break;
+    case 's':          toggleSidebar(); break;
+    case 'n':          openSongEditor(null); break;
+    case 'e':          if (state.currentSongId) openSongEditor(state.currentSongId); break;
+    case 'f':
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+      break;
+    case '0':          if (state.currentSongId) setTranspose(0); break;
+    case '=':
+    case '+':          setTranspose(state.transpose + 1); break;
+    case '-':
+    case '_':          setTranspose(state.transpose - 1); break;
+  }
+}
+function navigateSong(delta) {
+  const songs = getActiveSongs();
+  if (!songs.length) return;
+  const idx = songs.findIndex((s) => s.id === state.currentSongId);
+  let next = idx + delta;
+  if (next < 0) next = songs.length - 1;
+  if (next >= songs.length) next = 0;
+  loadSong(songs[next].id);
+}
+document.addEventListener('keydown', onKey);
+
+/* ══════════════════════════════════════════════════════════════
+   BOTTOM PADDING (mobile docks track-head at bottom)
+══════════════════════════════════════════════════════════════ */
+function updateBottomPadding() {
+  if (window.innerWidth <= 900) {
+    const h = dom.trackHead.offsetHeight;
+    dom.tabPanel.style.paddingBottom = (h + 24) + 'px';
+  } else {
+    dom.tabPanel.style.paddingBottom = '';
+  }
+}
+new ResizeObserver(updateBottomPadding).observe(dom.trackHead);
+window.addEventListener('resize', updateBottomPadding);
+
+/* ══════════════════════════════════════════════════════════════
+   PWA: register service worker
+══════════════════════════════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* ok if missing */ });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════════════ */
+applyShareLinkOnLoad();
+initFirebase();
+// If Firebase doesn't fire in 1s, populate from localStorage
+setTimeout(() => { if (state.library.length === 0 && !state.db) fallbackLocal(); }, 1000);
+updateBottomPadding();
+// Mobile-only first-run hint pointing at the hamburger menu
+setTimeout(maybeShowMenuTip, 700);
+</script>
+</body>
+</html>
