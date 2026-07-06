@@ -84,28 +84,28 @@
 /* ── Light Theme Override ── */
 [data-theme="light"] {
   --bg-0: #ffffff;
-  --bg-1: #f8f9fa;
-  --bg-2: #f0f1f3;
-  --bg-3: #e5e7eb;
-  --bg-4: #d1d5db;
-  --line: #e5e7eb;
-  --line-2: #d1d5db;
-  --fg-0: #111827;
-  --fg-1: #1f2937;
-  --fg-2: #4b5563;
+  --bg-1: #f0f2f5;       /* Darker header */
+  --bg-2: #e8eaed;
+  --bg-3: #d1d5db;
+  --bg-4: #9ca3af;
+  --line: #d1d5db;
+  --line-2: #9ca3af;
+  --fg-0: #000000;        /* Pure black for max contrast */
+  --fg-1: #111827;       /* Near black */
+  --fg-2: #374151;       /* Dark gray */
   --fg-3: #6b7280;
   --fg-4: #9ca3af;
-  --acc: #2563eb;
-  --acc-2: #1d4ed8;
-  --acc-3: #111827;
-  --acc-bg: rgba(37,99,235,.08);
-  --acc-bd: rgba(37,99,235,.35);
-  --ok: #059669;
-  --warn: #d97706;
-  --err: #dc2626;
-  --sh-1: 0 1px 2px rgba(0,0,0,.08);
-  --sh-2: 0 4px 16px rgba(0,0,0,.1);
-  --sh-3: 0 12px 40px rgba(0,0,0,.15);
+  --acc: #1e40af;        /* Darker blue */
+  --acc-2: #1e3a8a;
+  --acc-3: #000000;       /* Pure black chords */
+  --acc-bg: rgba(30,64,175,.1);
+  --acc-bd: rgba(30,64,175,.4);
+  --ok: #047857;
+  --warn: #b45309;
+  --err: #b91c1c;
+  --sh-1: 0 1px 2px rgba(0,0,0,.1);
+  --sh-2: 0 4px 16px rgba(0,0,0,.12);
+  --sh-3: 0 12px 40px rgba(0,0,0,.18);
 }
 
 [data-theme="light"] body::before {
@@ -114,7 +114,27 @@
 
 [data-theme="light"] .syl-chord {
   text-shadow: none !important;
-  color: #111827 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;   /* Extra bold chords */
+  letter-spacing: 0.02em;
+}
+
+[data-theme="light"] .syl-lyric {
+  color: #1f2937 !important;
+  font-weight: 500 !important;   /* Bolder lyrics */
+}
+
+[data-theme="light"] .section {
+  color: #000000 !important;
+  background: transparent !important;
+  border-bottom: 2px solid #d1d5db !important;
+  border-radius: 0 !important;
+  padding: 4px 0 !important;
+}
+
+[data-theme="light"] header {
+  background: #e5e7eb !important;  /* Even darker header */
+  border-bottom-color: #d1d5db !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
