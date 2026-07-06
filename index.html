@@ -117,6 +117,7 @@
   color: #000000 !important;
   font-weight: 900 !important;   /* Extra bold chords */
   letter-spacing: 0.02em;
+  font-size: 0.9em !important;   /* Slightly larger for visibility */
 }
 
 [data-theme="light"] .syl-lyric {
@@ -127,14 +128,50 @@
 [data-theme="light"] .section {
   color: #000000 !important;
   background: transparent !important;
-  border-bottom: 2px solid #d1d5db !important;
+  border: none !important;       /* Remove all borders */
+  border-bottom: 2px solid #9ca3af !important; /* Only underline */
   border-radius: 0 !important;
-  padding: 4px 0 !important;
+  padding: 8px 0 4px 0 !important;
+  font-size: 0.75rem !important;
+}
+
+[data-theme="light"] .section-inline {
+  background: transparent !important;
+  border: none !important;
+  border-left: 3px solid #6b7280 !important;
+  padding-left: 8px !important;
+  color: #4b5563 !important;
 }
 
 [data-theme="light"] header {
-  background: #e5e7eb !important;  /* Even darker header */
+  background: #e5e7eb !important;
   border-bottom-color: #d1d5db !important;
+}
+
+/* Mobile bottom bar - light theme */
+@media (max-width: 900px) {
+  [data-theme="light"] .track-head {
+    background: rgba(229,231,235,.98) !important;
+    backdrop-filter: blur(20px);
+    border-top-color: #d1d5db !important;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.08) !important;
+  }
+  [data-theme="light"] .track-title-display {
+    color: #111827 !important;
+  }
+  [data-theme="light"] .track-meta-line {
+    color: #4b5563 !important;
+  }
+  [data-theme="light"] .track-pill {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+    border-color: #d1d5db !important;
+  }
+  [data-theme="light"] .track-pill.accent {
+    background: #dbeafe !important;
+    color: #1e40af !important;
+    border-color: #93c5fd !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
