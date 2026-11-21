@@ -219,6 +219,10 @@ The virtual `"all"` setlist is computed client-side and contains every song in t
 
 ## 📜 Changelog
 
+### Unreleased
+- **Light theme legibility pass** — secondary text was set in gray-400 on light surfaces (~2:1 contrast, effectively unreadable for the small labels: drop-zone hint, stat labels, artist lines, form hints). Fixed by darkening the muted text ramp (`--fg-3` → `#4b5563`, `--fg-4` → `#5b6472`), darkening the amber "duplicate" stat colour, giving the drop zone a visible dashed edge, and fixing the track-pill values that were hard-coded to white (invisible on light pills). Every light-theme text now passes WCAG AA (≥ 4.5:1); the dark theme is untouched.
+- **Bulk import / export** — a "Bulk import" button in the sidebar takes many songs at once: a `.json` library, or a batch of ChordPro `.pro` / `.chopro` / `.txt` files. Duplicate preview (new / duplicate / skipped), skip-or-overwrite policy, target library or setlist, plus **Export library** and a **JSON template** download. Imports are additive — nothing already in your library is ever removed.
+
 ### v1.7 — BPM nudge + mobile coach mark
 - Removed TAP tempo (confused first-time users).
 - Added BPM nudge buttons (`−` / `+`, hold to auto-repeat, range 20–300).
