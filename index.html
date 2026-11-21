@@ -93,15 +93,15 @@
   --fg-0: #000000;        /* Pure black for max contrast */
   --fg-1: #111827;       /* Near black */
   --fg-2: #374151;       /* Dark gray */
-  --fg-3: #6b7280;
-  --fg-4: #9ca3af;
+  --fg-3: #4b5563;       /* Muted text — >=4.5:1 on --bg-2 */
+  --fg-4: #5b6472;       /* Faint text — still readable on --bg-2 */
   --acc: #1e40af;        /* Darker blue */
   --acc-2: #1e3a8a;
   --acc-3: #000000;       /* Pure black chords */
   --acc-bg: rgba(30,64,175,.1);
   --acc-bd: rgba(30,64,175,.4);
   --ok: #047857;
-  --warn: #b45309;
+  --warn: #92400e;       /* Darker amber — readable on --bg-2 */
   --err: #b91c1c;
   --sh-1: 0 1px 2px rgba(0,0,0,.1);
   --sh-2: 0 4px 16px rgba(0,0,0,.12);
@@ -129,7 +129,7 @@
   color: #000000 !important;
   background: transparent !important;
   border: none !important;       /* Remove all borders */
-  border-bottom: 2px solid #9ca3af !important; /* Only underline */
+  border-bottom: 2px solid #6b7280 !important; /* Only underline */
   border-radius: 0 !important;
   padding: 8px 0 4px 0 !important;
   font-size: 0.75rem !important;
@@ -173,6 +173,13 @@
     border-color: #93c5fd !important;
   }
 }
+
+/* Light theme: pill values were hard-coded to white (dark-theme only) → invisible on light pills */
+[data-theme="light"] .track-pill .val { color: var(--fg-0); }
+[data-theme="light"] .track-pill.accent .val { color: #1e40af; text-shadow: none; }
+
+/* Light theme: drop zone is the only target affordance — needs a visible edge */
+[data-theme="light"] .drop-zone { border-color: #6b7280; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
